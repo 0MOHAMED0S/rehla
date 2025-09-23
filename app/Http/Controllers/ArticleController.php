@@ -99,6 +99,10 @@ class ArticleController extends Controller
             ], 500);
         }
     }
+
+
+
+    
     public function update(ArticleRequest $request, Article $article): JsonResponse
     {
         try {
