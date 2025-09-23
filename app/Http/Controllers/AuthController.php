@@ -17,16 +17,13 @@ public function register(RegisterRequest $request): JsonResponse
     {
         try {
             $defaultRole = Role::where('name', 'user')->first();
-
             $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
                 'role_id' => $defaultRole->id,
             ]);
-
             $token = $user->createToken('auth_token')->plainTextToken;
-
             return response()->json([
                 'status'  => true,
                 'message' => 'User registered successfully',
