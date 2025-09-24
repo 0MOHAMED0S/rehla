@@ -22,9 +22,30 @@ class RegisterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|min:3|max:100',
-            'email' => 'required|email|max:255|unique:users,email',
+            'name'     => 'required|string|min:3|max:100',
+            'email'    => 'required|email|max:255|unique:users,email',
             'password' => 'required|string|min:6|max:100|confirmed',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'name.required'     => 'الاسم مطلوب.',
+            'name.string'       => 'الاسم يجب أن يكون نص.',
+            'name.min'          => 'الاسم يجب ألا يقل عن 3 أحرف.',
+            'name.max'          => 'الاسم يجب ألا يزيد عن 100 حرف.',
+
+            'email.required'    => 'البريد الإلكتروني مطلوب.',
+            'email.email'       => 'البريد الإلكتروني غير صالح.',
+            'email.max'         => 'البريد الإلكتروني يجب ألا يزيد عن 255 حرف.',
+            'email.unique'      => 'البريد الإلكتروني مستخدم بالفعل.',
+
+            'password.required' => 'كلمة المرور مطلوبة.',
+            'password.string'   => 'كلمة المرور يجب أن تكون نص.',
+            'password.min'      => 'كلمة المرور يجب ألا تقل عن 6 أحرف.',
+            'password.max'      => 'كلمة المرور يجب ألا تزيد عن 100 حرف.',
+            'password.confirmed' => 'تأكيد كلمة المرور غير مطابق.',
         ];
     }
 }

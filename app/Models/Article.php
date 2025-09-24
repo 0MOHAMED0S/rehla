@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Str;
 
 class Article extends Model
 {
@@ -11,14 +12,11 @@ class Article extends Model
 
     protected $fillable = [
         'title',
-        'description',
         'text',
         'image',
-        'user_id',
+        'author_name',
+        'slug',
+        'status'
     ];
 
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
 }

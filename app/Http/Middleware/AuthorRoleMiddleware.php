@@ -15,10 +15,10 @@ class AuthorRoleMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (! $request->user() || $request->user()->role->name !== 'author') {
+        if (! $request->user() || $request->user()->role->name !== 'content_editor') {
             return response()->json([
-                'status' => false,
-                'message' => 'Access denied. Author role required.'
+                'status'  => false,
+                'message' => 'تم رفض الوصول. هذه الصفحة تتطلب صلاحية محرر محتوى.'
             ], 403);
         }
 

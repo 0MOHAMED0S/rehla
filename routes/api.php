@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\ArticleController;
+use App\Http\Controllers\ContentCreatoe\ArticleController;
 use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -21,13 +21,8 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 //Author
-Route::get('/articles', [ArticleController::class, 'index']);
-Route::get('/articles/{article}', [ArticleController::class, 'show']);
-
 Route::middleware(['auth:sanctum', 'author'])->group(function () {
-    Route::post('/articles', [ArticleController::class, 'store']);
-    Route::put('/articles/{article}', [ArticleController::class, 'update']);
-    Route::patch('/articles/{article}', [ArticleController::class, 'update']); // optional
-    Route::delete('/articles/{article}', [ArticleController::class, 'destroy']);
+    Route::apiResource('articles', ArticleController::class);
 });
+
 
