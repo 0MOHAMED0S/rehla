@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\ContentCreator\ArticleController;
+use App\Http\Controllers\Admin\Users\RolesController;
 use App\Http\Controllers\Admin\Users\UsersController;
 use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
@@ -26,7 +27,8 @@ Route::middleware(['auth:sanctum', 'author','admin'])->group(function () {
     Route::apiResource('articles', ArticleController::class);
 });
 
-Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+Route::middleware(['auth:sanctum','admin'])->group(function () {
     Route::apiResource('users', UsersController::class);
-    Route::Put('/users/{id}/role', [UsersController::class, 'updateRole']);
+    Route::Put('/users/{id}/role', [RolesController::class, 'updateUserRole']);
+    Route::get('/roles', [RolesController::class, 'index']);
 });
