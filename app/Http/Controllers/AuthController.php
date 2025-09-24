@@ -13,35 +13,32 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
-    public function register(RegisterRequest $request): JsonResponse
+public function register(RegisterRequest $request): JsonResponse
     {
         try {
             $defaultRole = Role::where('name', 'user')->first();
-
             $user = User::create([
-                'name'     => $request->name,
-                'email'    => $request->email,
+                'name' => $request->name,
+                'email' => $request->email,
                 'password' => Hash::make($request->password),
-                'role_id'  => $defaultRole->id,
+                'role_id' => $defaultRole->id,
             ]);
-
             $token = $user->createToken('auth_token')->plainTextToken;
-
             return response()->json([
                 'status'  => true,
-                'message' => 'تم تسجيل المستخدم بنجاح',
-                'user'    => $user->load('role'), // تضمين علاقة الدور
+                'message' => 'User registered successfully',
+                'user'    => $user->load('role'), // include role relation
                 'token'   => $token
             ], 201);
+
         } catch (\Exception $e) {
             return response()->json([
                 'status'  => false,
-                'message' => 'فشل في تسجيل المستخدم',
+                'message' => 'Registration failed',
                 'error'   => $e->getMessage()
             ], 500);
         }
     }
-
 
     public function login(LoginRequest $request): JsonResponse
     {
@@ -49,7 +46,7 @@ class AuthController extends Controller
             if (!Auth::attempt($request->only('email', 'password'))) {
                 return response()->json([
                     'status'  => false,
-                    'message' => 'بيانات الدخول غير صحيحة'
+                    'message' => 'Invalid credentials'
                 ], 401);
             }
 
@@ -58,19 +55,19 @@ class AuthController extends Controller
 
             return response()->json([
                 'status'  => true,
-                'message' => 'تم تسجيل الدخول بنجاح',
-                'user'    => $user->load('role'), // تضمين علاقة الدور
+                'message' => 'Login successful',
+                'user'    => $user->load('role'), // include role relation
                 'token'   => $token
             ]);
+
         } catch (\Exception $e) {
             return response()->json([
                 'status'  => false,
-                'message' => 'فشل في تسجيل الدخول',
+                'message' => 'Login failed',
                 'error'   => $e->getMessage()
             ], 500);
         }
     }
-
 
     public function logout(): JsonResponse
     {
@@ -79,12 +76,13 @@ class AuthController extends Controller
 
             return response()->json([
                 'status'  => true,
-                'message' => 'تم تسجيل الخروج بنجاح'
+                'message' => 'Logged out successfully'
             ]);
+
         } catch (\Exception $e) {
             return response()->json([
                 'status'  => false,
-                'message' => 'فشل في تسجيل الخروج',
+                'message' => 'Logout failed',
                 'error'   => $e->getMessage()
             ], 500);
         }
