@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\ContentCreatoe;
+namespace App\Http\Controllers\Admin\ContentCreator;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Articles\StoreArticleRequest;
@@ -13,9 +13,6 @@ use Illuminate\Support\Facades\Storage;
 
 class ArticleController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index(): JsonResponse
     {
         try {
@@ -55,10 +52,6 @@ class ArticleController extends Controller
         }
     }
 
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(StoreArticleRequest $request): JsonResponse
     {
         try {
@@ -103,10 +96,6 @@ class ArticleController extends Controller
         }
     }
 
-
-    /**
-     * Display the specified resource.
-     */
     public function show(Article $article): JsonResponse
     {
         try {
@@ -131,11 +120,6 @@ class ArticleController extends Controller
             ], 500);
         }
     }
-
-
-    /**
-     * Update the specified resource in storage.
-     */
 
     public function update(UpdateArticleRequest $request, $id): JsonResponse
     {
@@ -195,10 +179,6 @@ class ArticleController extends Controller
             ], 500);
         }
     }
-
-    /**
-     * Remove the specified resource from storage.
-     */
 
     public function destroy($id): JsonResponse
     {

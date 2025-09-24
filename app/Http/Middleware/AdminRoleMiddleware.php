@@ -6,7 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class AuthorRoleMiddleware
+class AdminRoleMiddleware
 {
     /**
      * Handle an incoming request.
@@ -15,13 +15,13 @@ class AuthorRoleMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (! $request->user() || $request->user()->role->name !== 'content_editor' ) {
+        if (! $request->user() || $request->user()->role->name !== 'super_admin') {
             return response()->json([
                 'status'  => false,
-                'message' => 'تم رفض الوصول. هذه الصفحة تتطلب صلاحية محرر محتوى.'
+                'message' => 'تم رفض الوصول. هذه الصفحة تتطلب صلاحية المدير.'
             ], 403);
         }
-
         return $next($request);
     }
+
 }
