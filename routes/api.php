@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\ContentCreator\ArticleController;
 use App\Http\Controllers\Admin\Users\RolesController;
 use App\Http\Controllers\Admin\Users\UsersController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\User\Articles\ArticleController as UserArticleController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -32,3 +33,5 @@ Route::middleware(['auth:sanctum','admin'])->group(function () {
     Route::Put('/users/{id}/role', [RolesController::class, 'updateUserRole']);
     Route::get('/roles', [RolesController::class, 'index']);
 });
+    Route::get('user/articles', [UserArticleController::class, 'index']);
+    Route::get('user/articles/{slug}', [UserArticleController::class, 'show']);
