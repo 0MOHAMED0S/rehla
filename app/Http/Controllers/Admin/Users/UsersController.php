@@ -13,24 +13,26 @@ use Illuminate\Support\Facades\Hash;
 class UsersController extends Controller
 {
 
-    public function index()
-    {
-        try {
-            $users = User::with('role')->get();
+public function index()
+{
+    try {
+        // تغيير الرقم 10 لعدد المستخدمين في الصفحة
+        $users = User::with('role')->paginate(10);
 
-            return response()->json([
-                'status'  => true,
-                'message' => 'تم جلب المستخدمين بنجاح',
-                'users'   => $users
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status'  => false,
-                'message' => 'فشل في جلب المستخدمين',
-                'error'   => $e->getMessage()
-            ], 500);
-        }
+        return response()->json([
+            'status'  => true,
+            'message' => 'تم جلب المستخدمين بنجاح',
+            'users'   => $users
+        ], 200);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status'  => false,
+            'message' => 'فشل في جلب المستخدمين',
+            'error'   => $e->getMessage()
+        ], 500);
     }
+}
+
 
     public function store(RegisterRequest $request)
     {
