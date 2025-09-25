@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ArticleController extends Controller
 {
@@ -57,20 +58,27 @@ class ArticleController extends Controller
         try {
             $data = $request->validated();
 
-            // رفع الصورة
             if ($request->hasFile('image')) {
                 $path = $request->file('image')->store('articles', 'public');
                 $data['image'] = $path;
             }
+
             $data['user_id'] = Auth::id();
-            $data['slug'] = $request->input('slug');
+            if ($request->filled('slug')) {
+                $slug = Str::slug($request->input('slug'));
+            } else {
+                $slug = Str::slug($request->input('title'));
+            }
 
-            // author_name من الفورم
+            $originalSlug = $slug;
+            $counter = 1;
+            while (Article::where('slug', $slug)->exists()) {
+                $slug = $originalSlug . '-' . $counter++;
+            }
+            $data['slug'] = $slug;
+
             $data['author_name'] = $request->input('author_name');
-
-            // الحالة (افتراضي true لو مش موجودة)
             $data['status'] = $request->input('status', true);
-
             $article = Article::create($data);
 
             return response()->json([
@@ -96,30 +104,33 @@ class ArticleController extends Controller
         }
     }
 
-    public function show(Article $article): JsonResponse
-    {
-        try {
-            return response()->json([
-                'status'  => true,
-                'message' => 'تم جلب المقال بنجاح',
-                'article' => [
-                    'id'          => $article->id,
-                    'title'       => $article->title,
-                    'slug'        => $article->slug,
-                    'text'        => $article->text,
-                    'image'       => $article->image,
-                    'status'      => $article->status,
-                    'author_name' => $article->author_name,
-                    'created_at'  => $article->created_at,
-                ],
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status'  => false,
-                'message' => 'حدث خطأ ما: ' . $e->getMessage(),
-            ], 500);
-        }
+
+public function show(Article $article): JsonResponse
+{
+    try {
+        return response()->json([
+            'status'  => true,
+            'message' => 'تم جلب المقال بنجاح',
+            'article' => [
+                'id'          => $article->id,
+                'title'       => $article->title,
+                'slug'        => $article->slug,
+                'text'        => $article->text,
+                'image'       => $article->image,
+                'status'      => $article->status,
+                'author_name' => $article->author_name,
+                'created_at'  => $article->created_at,
+            ],
+        ], 200);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status'  => false,
+            'message' => 'حدث خطأ ما: ' . $e->getMessage(),
+        ], 500);
     }
+}
+
+
 
     public function update(UpdateArticleRequest $request, $id): JsonResponse
     {
@@ -149,17 +160,28 @@ class ArticleController extends Controller
             }
 
             if ($request->filled('slug')) {
-                $data['slug'] = $request->slug;
+                $slug = Str::slug($request->slug);
+            } elseif ($request->filled('title')) {
+                $slug = Str::slug($request->title);
+            } else {
+                $slug = $article->slug;
             }
+
+            if ($slug !== $article->slug) {
+                $originalSlug = $slug;
+                $counter = 1;
+                while (Article::where('slug', $slug)->where('id', '!=', $article->id)->exists()) {
+                    $slug = $originalSlug . '-' . $counter++;
+                }
+            }
+            $data['slug'] = $slug;
 
             if ($request->filled('text')) {
                 $data['text'] = $request->text;
             }
-
             if ($request->filled('author_name')) {
                 $data['author_name'] = $request->author_name;
             }
-
             if ($request->filled('status')) {
                 $data['status'] = $request->status;
             }
@@ -179,6 +201,7 @@ class ArticleController extends Controller
             ], 500);
         }
     }
+
 
     public function destroy($id): JsonResponse
     {
