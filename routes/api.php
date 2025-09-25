@@ -39,7 +39,7 @@ Route::get('user/articles', [UserArticleController::class, 'index']);
 Route::get('user/articles/{slug}', [UserArticleController::class, 'show']);
 
 //contact
-Route::get('/user/contact-subjects', [ContactController::class, 'index']);
+Route::get('/user/contact-subjects', [UserContactController::class, 'index']);
 Route::post('/user/contact', [UserContactController::class, 'store']);
 
 Route::middleware(['auth:sanctum', 'support'])->group(function () {
