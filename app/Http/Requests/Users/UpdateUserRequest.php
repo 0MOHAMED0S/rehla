@@ -20,19 +20,19 @@ class UpdateUserRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
-    public function rules(): array
-    {
-        return [
-            'name'  => 'sometimes|string|max:255',
-            'email' => [
-                'sometimes',
-                'string',
-                'email',
-                'max:255',
-                Rule::unique('users', 'email')->ignore($this->route('user')->id),
-            ],
-        ];
-    }
+public function rules(): array
+{
+    return [
+        'name'  => 'sometimes|string|max:255',
+        'email' => [
+            'sometimes',
+            'string',
+            'email',
+            'max:255',
+            Rule::unique('users', 'email')->ignore($this->route('user')),
+        ],
+    ];
+}
 
 
 
