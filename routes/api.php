@@ -5,6 +5,8 @@ use App\Http\Controllers\Admin\Users\RolesController;
 use App\Http\Controllers\Admin\Users\UsersController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\User\Articles\ArticleController as UserArticleController;
+use App\Http\Controllers\Admin\Contacts\ContactController;
+use App\Http\Controllers\User\Contacts\ContactController as UserContactController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -28,10 +30,19 @@ Route::middleware(['auth:sanctum', 'author'])->group(function () {
     Route::apiResource('articles', ArticleController::class);
 });
 
-Route::middleware(['auth:sanctum','admin'])->group(function () {
+Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::apiResource('users', UsersController::class);
     Route::Put('/users/{id}/role', [RolesController::class, 'updateUserRole']);
     Route::get('/roles', [RolesController::class, 'index']);
 });
-    Route::get('user/articles', [UserArticleController::class, 'index']);
-    Route::get('user/articles/{slug}', [UserArticleController::class, 'show']);
+Route::get('user/articles', [UserArticleController::class, 'index']);
+Route::get('user/articles/{slug}', [UserArticleController::class, 'show']);
+
+//contact
+Route::get('/user/contact-subjects', [ContactController::class, 'index']);
+Route::post('/user/contact', [UserContactController::class, 'store']);
+
+Route::middleware(['auth:sanctum', 'support'])->group(function () {
+Route::get('/admin/contact', [ContactController::class, 'index']);
+Route::post('/admin/contact/{id}', [ContactController::class, 'show']);
+});
