@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\Users\UsersController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\User\Articles\ArticleController as UserArticleController;
 use App\Http\Controllers\Admin\Contacts\ContactController;
+use App\Http\Controllers\Admin\Shipping\ShippingController;
 use App\Http\Controllers\User\Contacts\ContactController as UserContactController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -34,7 +35,15 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::apiResource('users', UsersController::class);
     Route::Put('/users/{id}/role', [RolesController::class, 'updateUserRole']);
     Route::get('/roles', [RolesController::class, 'index']);
+    Route::put('/admin/shipping/{id}', [ShippingController::class, 'update']);
 });
+
+Route::middleware(['auth:sanctum', 'support'])->group(function () {
+    Route::get('/admin/contact', [ContactController::class, 'index']);
+    Route::post('/admin/contact/{id}', [ContactController::class, 'show']);
+});
+
+//articles
 Route::get('user/articles', [UserArticleController::class, 'index']);
 Route::get('user/articles/{slug}', [UserArticleController::class, 'show']);
 
@@ -42,7 +51,5 @@ Route::get('user/articles/{slug}', [UserArticleController::class, 'show']);
 Route::get('/user/contact-subjects', [UserContactController::class, 'index']);
 Route::post('/user/contact', [UserContactController::class, 'store']);
 
-Route::middleware(['auth:sanctum', 'support'])->group(function () {
-Route::get('/admin/contact', [ContactController::class, 'index']);
-Route::post('/admin/contact/{id}', [ContactController::class, 'show']);
-});
+//shipping
+Route::get('/user/shipping', [ShippingController::class, 'index']);
