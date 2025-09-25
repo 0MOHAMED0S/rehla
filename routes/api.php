@@ -23,7 +23,7 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 //Author
-Route::middleware(['auth:sanctum', 'author','admin'])->group(function () {
+Route::middleware(['auth:sanctum', 'author'])->group(function () {
     Route::apiResource('articles', ArticleController::class);
 });
 
