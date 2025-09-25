@@ -105,9 +105,18 @@ class ArticleController extends Controller
     }
 
 
-public function show(Article $article): JsonResponse
+public function show($slug): JsonResponse
 {
     try {
+        $article = Article::where('slug', $slug)->first();
+
+        if (! $article) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'المقال غير موجود',
+            ], 404);
+        }
+
         return response()->json([
             'status'  => true,
             'message' => 'تم جلب المقال بنجاح',
@@ -122,13 +131,16 @@ public function show(Article $article): JsonResponse
                 'created_at'  => $article->created_at,
             ],
         ], 200);
+
     } catch (\Exception $e) {
         return response()->json([
             'status'  => false,
-            'message' => 'حدث خطأ ما: ' . $e->getMessage(),
+            'message' => 'حدث خطأ ما أثناء جلب المقال',
+            'error'   => config('app.debug') ? $e->getMessage() : null,
         ], 500);
     }
 }
+
 
 
 
