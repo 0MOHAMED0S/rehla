@@ -16,7 +16,6 @@ class UsersController extends Controller
 public function index()
 {
     try {
-        // تغيير الرقم 10 لعدد المستخدمين في الصفحة
         $users = User::with('role')->paginate(10);
 
         return response()->json([
@@ -99,7 +98,7 @@ public function index()
                 ], 404);
             }
 
-            $data = $request->only(['name', 'email']); // فقط الاسم والإيميل
+            $data = $request->only(['name', 'email']); 
 
             $user->update($data);
 
