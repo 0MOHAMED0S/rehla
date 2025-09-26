@@ -48,7 +48,6 @@ Route::middleware(['auth:sanctum', 'enhalak'])->group(function () {
         Route::put('/admin/shipping/{id}', [ShippingController::class, 'update']);
 });
 
-
 //articles
 Route::get('user/articles', [UserArticleController::class, 'index']);
 Route::get('user/articles/{slug}', [UserArticleController::class, 'show']);
