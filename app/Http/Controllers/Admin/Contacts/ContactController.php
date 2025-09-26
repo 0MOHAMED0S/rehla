@@ -26,6 +26,7 @@ class ContactController extends Controller
                         'email'   => $msg->email,
                         'message' => $msg->message,
                         'subject' => $msg->subject ? $msg->subject->name : null,
+                        'is_read' => $msg->is_read,
                         'created_at' => $msg->created_at->toDateTimeString(),
                     ];
                 }),
