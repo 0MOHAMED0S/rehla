@@ -17,5 +17,6 @@ class Product extends Model
         'image',
         'status',
         'offered_price',
+        'fixed_price'
     ];
 }

@@ -19,6 +19,7 @@ return new class extends Migration
             $table->integer('electronic_copy_price')->nullable();
             $table->integer('printed_copy_price')->nullable();
             $table->integer('offered_price')->nullable();
+            $table->integer('fixed_price')->nullable();
             $table->tinyInteger('status')->default(1);
             $table->string('image');
             $table->timestamps();

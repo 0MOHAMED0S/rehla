@@ -44,9 +44,9 @@ Route::middleware(['auth:sanctum', 'support'])->group(function () {
 });
 
 Route::middleware(['auth:sanctum', 'enhalak'])->group(function () {
-    Route::apiResource('/admin/products', ProducController::class);
     Route::put('/admin/shipping/{id}', [ShippingController::class, 'update']);
 });
+    Route::apiResource('/admin/products', ProducController::class);
 
 
 //articles

@@ -3,8 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -18,5 +18,15 @@ class DatabaseSeeder extends Seeder
             ContactSubjectsSeeder::class,
             ShippingSeeder::class,
         ]);
+
+        User::updateOrCreate(
+            ['email' => 'superadmin@gmail.com'],
+            [
+                'name' => 'Super Admin',
+                'email' => 'superadmin@example.com',
+                'password' => Hash::make('10203040'),
+                'role_id' => 1,
+            ]
+        );
     }
 }

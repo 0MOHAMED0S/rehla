@@ -17,9 +17,12 @@ class StoreProductRequest extends FormRequest
             'name'                  => ['required', 'string', 'min:3', 'max:255'],
             'description'           => ['required', 'string', 'min:10', 'max:1000'],
             'features_text'         => ['required', 'string', 'min:5', 'max:2000'],
+
+            'fixed_price'           => ['nullable', 'integer', 'min:0'],
             'electronic_copy_price' => ['nullable', 'integer', 'min:0'],
             'printed_copy_price'    => ['nullable', 'integer', 'min:0'],
             'offered_price'         => ['nullable', 'integer', 'min:0'],
+
             'image'                 => ['required', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:2048'],
         ];
     }
@@ -27,15 +30,28 @@ class StoreProductRequest extends FormRequest
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
+            $fixed      = $this->input('fixed_price');
             $electronic = $this->input('electronic_copy_price');
             $printed    = $this->input('printed_copy_price');
             $offer      = $this->input('offered_price');
 
-            if (is_null($electronic) && is_null($printed) && is_null($offer)) {
-                $validator->errors()->add(
-                    'price',
-                    'يجب إدخال سعر النسخة الإلكترونية أو المطبوعه أو العرض على الأقل.'
-                );
+            // ✅ إذا فيه fixed_price
+            if (!is_null($fixed)) {
+                if (!is_null($electronic) || !is_null($printed) || !is_null($offer)) {
+                    $validator->errors()->add(
+                        'fixed_price',
+                        'إذا اخترت السعر الثابت لا يمكن إدخال أسعار أخرى.'
+                    );
+                }
+            }
+            // ✅ إذا ما فيش fixed_price
+            else {
+                if (is_null($electronic) && is_null($printed) && is_null($offer)) {
+                    $validator->errors()->add(
+                        'price',
+                        'يجب إدخال سعر النسخة الإلكترونية أو المطبوعه أو العرض على الأقل عند عدم وجود سعر ثابت.'
+                    );
+                }
             }
         });
     }
@@ -60,6 +76,10 @@ class StoreProductRequest extends FormRequest
             'features_text.string'   => 'المميزات يجب أن تكون نصاً.',
             'features_text.min'      => 'المميزات يجب أن تحتوي على 5 أحرف على الأقل.',
             'features_text.max'      => 'المميزات لا يجب أن تتجاوز 2000 حرف.',
+
+            // السعر الثابت
+            'fixed_price.integer' => 'السعر الثابت يجب أن يكون رقماً صحيحاً.',
+            'fixed_price.min'     => 'السعر الثابت لا يمكن أن يكون أقل من 0.',
 
             // السعر الإلكتروني
             'electronic_copy_price.integer' => 'سعر النسخة الإلكترونية يجب أن يكون رقماً صحيحاً.',
