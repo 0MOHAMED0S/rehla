@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'author' => \App\Http\Middleware\AuthorRoleMiddleware::class,
             'admin' => \App\Http\Middleware\AdminRoleMiddleware::class,
             'support' => \App\Http\Middleware\SupportRoleMiddleware::class,
+            'enhalak' => \App\Http\Middleware\EnhaLakRoleMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
