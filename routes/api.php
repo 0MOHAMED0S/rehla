@@ -7,8 +7,10 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\User\Articles\ArticleController as UserArticleController;
 use App\Http\Controllers\Admin\Contacts\ContactController;
 use App\Http\Controllers\Admin\EnhaLak\ProducController;
+use App\Http\Controllers\Admin\LogoAndLink\LogoAndLinkController;
 use App\Http\Controllers\Admin\Shipping\ShippingController;
 use App\Http\Controllers\User\Contacts\ContactController as UserContactController;
+use App\Http\Controllers\User\LogoAndLink\LogoAndLinkController as UserLogoAndLinkController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -33,6 +35,7 @@ Route::middleware(['auth:sanctum', 'author'])->group(function () {
 });
 
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+    Route::post('admin/logos-and-links', [LogoAndLinkController::class, 'update']);
     Route::apiResource('users', UsersController::class);
     Route::Put('/users/{id}/role', [RolesController::class, 'updateUserRole']);
     Route::get('/roles', [RolesController::class, 'index']);
@@ -58,3 +61,6 @@ Route::post('/user/contact', [UserContactController::class, 'store']);
 
 //shipping
 Route::get('/user/shipping', [ShippingController::class, 'index']);
+
+//logosandlinks
+Route::get('user/logos-and-links', [UserLogoAndLinkController::class, 'index']);
