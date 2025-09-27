@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\LogoAndLink\LogoAndLinkController;
 use App\Http\Controllers\Admin\Shipping\ShippingController;
 use App\Http\Controllers\User\Contacts\ContactController as UserContactController;
 use App\Http\Controllers\User\LogoAndLink\LogoAndLinkController as UserLogoAndLinkController;
+use App\Http\Controllers\User\Products\ProductController  as UserProductController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -64,3 +65,7 @@ Route::get('/user/shipping', [ShippingController::class, 'index']);
 
 //logosandlinks
 Route::get('user/logos-and-links', [UserLogoAndLinkController::class, 'index']);
+
+//products
+Route::get('/user/products', [UserProductController::class, 'index']);
+Route::get('/user/products/{id}', [UserProductController::class, 'show']);
