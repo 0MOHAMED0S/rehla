@@ -90,8 +90,16 @@ public function checkChildren()
     try {
         $parentId = Auth::id();
 
-        // Get all children for this parent
-        $children = Child::where('parent_id', $parentId)->get();
+        // Get all children with their user data
+        $children = Child::with('user')->where('parent_id', $parentId)->get();
+
+        // Merge each child's data with its user data
+        $childrenData = $children->map(function ($child) {
+            return array_merge(
+                $child->toArray(),
+                $child->user ? $child->user->toArray() : []
+            );
+        });
 
         return response()->json([
             'status'       => true,
@@ -99,11 +107,10 @@ public function checkChildren()
                                 ? 'لدى المستخدم أطفال مسجلين'
                                 : 'لا يوجد أطفال للمستخدم',
             'has_children' => $children->isNotEmpty(),
-            'children'     => $children,
+            'children'     => $childrenData,
         ], 200);
 
     } catch (\Exception $e) {
-        // Handle any errors
         return response()->json([
             'status'  => false,
             'message' => 'حدث خطأ أثناء جلب الأطفال',
@@ -111,6 +118,7 @@ public function checkChildren()
         ], 500);
     }
 }
+
 
 
 }
