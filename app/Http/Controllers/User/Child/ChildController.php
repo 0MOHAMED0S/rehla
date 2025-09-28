@@ -85,7 +85,21 @@ public function childDetails($childId)
         ], 500);
     }
 }
+    public function checkChildren()
+{
+    $parentId = Auth::id();
 
+    // Get children count for this parent
+    $childrenCount = Child::where('parent_id', $parentId)->count();
 
+    return response()->json([
+        'status'  => true,
+        'message' => $childrenCount > 0
+                        ? 'لدى المستخدم أطفال مسجلين'
+                        : 'لا يوجد أطفال للمستخدم',
+        'has_children' => $childrenCount > 0,
+        'children_count' => $childrenCount,
+    ], 200);
+}
 
 }

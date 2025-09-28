@@ -30,6 +30,8 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/user/children', [ChildController::class, 'store']);
+    Route::get('/user/children/check', [ChildController::class, 'checkChildren']);
+
 
 });
 
@@ -72,7 +74,7 @@ Route::get('user/logos-and-links', [UserLogoAndLinkController::class, 'index']);
 //products
 Route::get('/user/products', [UserProductController::class, 'index']);
 Route::get('/user/products/{id}', [UserProductController::class, 'show']);
-Route::middleware('auth:sanctum')->get('/user/children/check', [ChildController::class, 'checkChildren']);
+
 
 Route::middleware(['auth:sanctum', 'check.child'])->get('user/children/{child}', [ChildController::class, 'childDetails']);
 
