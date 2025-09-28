@@ -51,4 +51,14 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Role::class);
     }
+
+    public function children()
+    {
+        return $this->hasMany(Child::class, 'parent_id');
+    }
+
+    public function childProfile()
+    {
+        return $this->hasOne(Child::class, 'user_id');
+    }
 }

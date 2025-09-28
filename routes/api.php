@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\Contacts\ContactController;
 use App\Http\Controllers\Admin\EnhaLak\ProducController;
 use App\Http\Controllers\Admin\LogoAndLink\LogoAndLinkController;
 use App\Http\Controllers\Admin\Shipping\ShippingController;
+use App\Http\Controllers\User\Child\ChildController;
 use App\Http\Controllers\User\Contacts\ContactController as UserContactController;
 use App\Http\Controllers\User\LogoAndLink\LogoAndLinkController as UserLogoAndLinkController;
 use App\Http\Controllers\User\Products\ProductController  as UserProductController;
@@ -28,6 +29,8 @@ Route::middleware('guest')->group(function () {
 // Routes for authenticated users (Sanctum token required)
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/user/children', [ChildController::class, 'store']);
+
 });
 
 //Author
@@ -69,3 +72,7 @@ Route::get('user/logos-and-links', [UserLogoAndLinkController::class, 'index']);
 //products
 Route::get('/user/products', [UserProductController::class, 'index']);
 Route::get('/user/products/{id}', [UserProductController::class, 'show']);
+Route::middleware('auth:sanctum')->get('/user/children/check', [ChildController::class, 'checkChildren']);
+
+Route::middleware(['auth:sanctum', 'check.child'])->get('user/children/{child}', [ChildController::class, 'childDetails']);
+
