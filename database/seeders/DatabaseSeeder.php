@@ -18,6 +18,8 @@ class DatabaseSeeder extends Seeder
             ContactSubjectsSeeder::class,
             ShippingSeeder::class,
             LogoAndLinkSeeder::class,
+            AboutUsSeeder::class,
+            TermsOfUseSeeder::class,
         ]);
 
         User::updateOrCreate(

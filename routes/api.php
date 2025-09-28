@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\admin\AboutUs\AboutUsController;
 use App\Http\Controllers\Admin\ContentCreator\ArticleController;
 use App\Http\Controllers\Admin\Users\RolesController;
 use App\Http\Controllers\Admin\Users\UsersController;
@@ -9,6 +10,7 @@ use App\Http\Controllers\Admin\Contacts\ContactController;
 use App\Http\Controllers\Admin\EnhaLak\ProducController;
 use App\Http\Controllers\Admin\LogoAndLink\LogoAndLinkController;
 use App\Http\Controllers\Admin\Shipping\ShippingController;
+use App\Http\Controllers\Admin\TermsOfUse\TermsOfUseController;
 use App\Http\Controllers\User\Child\ChildController;
 use App\Http\Controllers\User\Contacts\ContactController as UserContactController;
 use App\Http\Controllers\User\LogoAndLink\LogoAndLinkController as UserLogoAndLinkController;
@@ -45,6 +47,9 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::apiResource('users', UsersController::class);
     Route::Put('/users/{id}/role', [RolesController::class, 'updateUserRole']);
     Route::get('/roles', [RolesController::class, 'index']);
+    Route::put('/admin/aboutus/update', [AboutUsController::class, 'update']);
+    Route::put('/admin/terms/update', [TermsOfUseController::class, 'update']);
+
 });
 
 Route::middleware(['auth:sanctum', 'support'])->group(function () {
@@ -78,3 +83,6 @@ Route::get('/user/products/{id}', [UserProductController::class, 'show']);
 
 Route::middleware(['auth:sanctum', 'check.child'])->get('user/children/{child}', [ChildController::class, 'childDetails']);
 
+
+Route::get('/user/aboutus', [AboutUsController::class, 'index']);
+Route::get('/user/terms', [TermsOfUseController::class, 'index']);
