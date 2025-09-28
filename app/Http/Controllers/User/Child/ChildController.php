@@ -91,7 +91,7 @@ public function checkChildren()
         $parentId = Auth::id();
 
         // Get all children with their user data
-        $children = Child::with('user')->where('parent_id', $parentId)->get();
+        $children = Child::where('parent_id', $parentId)->get();
 
         // Merge each child's data with its user data
         $childrenData = $children->map(function ($child) {
