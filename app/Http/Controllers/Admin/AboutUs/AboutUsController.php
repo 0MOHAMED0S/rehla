@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\admin\AboutUs;
+namespace App\Http\Controllers\Admin\AboutUs;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AboutUs\UpdateAboutUsRequest;

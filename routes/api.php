@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\admin\AboutUs\AboutUsController;
+use App\Http\Controllers\Admin\AboutUs\AboutUsController;
 use App\Http\Controllers\Admin\ContentCreator\ArticleController;
 use App\Http\Controllers\Admin\Users\RolesController;
 use App\Http\Controllers\Admin\Users\UsersController;
