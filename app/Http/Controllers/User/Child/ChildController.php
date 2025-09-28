@@ -85,21 +85,32 @@ public function childDetails($childId)
         ], 500);
     }
 }
-    public function checkChildren()
+public function checkChildren()
 {
-    $parentId = Auth::id();
+    try {
+        $parentId = Auth::id();
 
-    // Get children count for this parent
-    $childrenCount = Child::where('parent_id', $parentId)->count();
+        // Get all children for this parent
+        $children = Child::where('parent_id', $parentId)->get();
 
-    return response()->json([
-        'status'  => true,
-        'message' => $childrenCount > 0
-                        ? 'لدى المستخدم أطفال مسجلين'
-                        : 'لا يوجد أطفال للمستخدم',
-        'has_children' => $childrenCount > 0,
-        'children_count' => $childrenCount,
-    ], 200);
+        return response()->json([
+            'status'       => true,
+            'message'      => $children->isNotEmpty()
+                                ? 'لدى المستخدم أطفال مسجلين'
+                                : 'لا يوجد أطفال للمستخدم',
+            'has_children' => $children->isNotEmpty(),
+            'children'     => $children,
+        ], 200);
+
+    } catch (\Exception $e) {
+        // Handle any errors
+        return response()->json([
+            'status'  => false,
+            'message' => 'حدث خطأ أثناء جلب الأطفال',
+            'error'   => $e->getMessage(),
+        ], 500);
+    }
 }
+
 
 }
