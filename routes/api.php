@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AboutUs\AboutUsController;
+use App\Http\Controllers\Admin\BedaetElrehla\PackageController;
 use App\Http\Controllers\Admin\ContentCreator\ArticleController;
 use App\Http\Controllers\Admin\Users\RolesController;
 use App\Http\Controllers\Admin\Users\UsersController;
@@ -59,8 +60,13 @@ Route::middleware(['auth:sanctum', 'support'])->group(function () {
 
 Route::middleware(['auth:sanctum', 'enhalak'])->group(function () {
         Route::put('/admin/shipping/{id}', [ShippingController::class, 'update']);
-});
         Route::apiResource('/admin/products', ProducController::class);
+});
+
+Route::middleware(['auth:sanctum', 'bedaet'])->group(function () {
+        Route::apiResource('/admin/packages', PackageController::class);
+
+});
 
 //articles
 Route::get('user/articles', [UserArticleController::class, 'index']);
@@ -86,3 +92,4 @@ Route::middleware(['auth:sanctum', 'check.child'])->get('user/children/{child}',
 
 Route::get('/user/aboutus', [AboutUsController::class, 'index']);
 Route::get('/user/terms', [TermsOfUseController::class, 'index']);
+
