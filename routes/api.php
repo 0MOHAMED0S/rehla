@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\TermsOfUse\TermsOfUseController;
 use App\Http\Controllers\User\Child\ChildController;
 use App\Http\Controllers\User\Contacts\ContactController as UserContactController;
 use App\Http\Controllers\User\LogoAndLink\LogoAndLinkController as UserLogoAndLinkController;
+use App\Http\Controllers\User\Orders\OrderController;
 use App\Http\Controllers\User\Products\ProductController  as UserProductController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -93,3 +94,5 @@ Route::middleware(['auth:sanctum', 'check.child'])->get('user/children/{child}',
 Route::get('/user/aboutus', [AboutUsController::class, 'index']);
 Route::get('/user/terms', [TermsOfUseController::class, 'index']);
 
+Route::middleware(['auth:sanctum'])->post('/user/order/{id}', [OrderController::class, 'store']);
+Route::post('/paymob/webhook', [OrderController::class, 'callback']);
