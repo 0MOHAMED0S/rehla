@@ -11,6 +11,7 @@ use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class OrderController extends Controller
 {
@@ -122,55 +123,11 @@ class OrderController extends Controller
     /**
      * Paymob Callback (Webhook)
      */
-    public function callback(Request $request)
-    {
-        $data = $request->all();
+public function callback(Request $request)
+{
+    Log::info('Paymob Webhook:', $request->all());
 
-        // ✅ Validate HMAC
-        $hmacSecret = env('PAYMOB_HMAC');
-        $fields = [
-            'amount_cents',
-            'created_at',
-            'currency',
-            'error_occured',
-            'has_parent_transaction',
-            'id',
-            'integration_id',
-            'is_3d_secure',
-            'is_auth',
-            'is_capture',
-            'is_refunded',
-            'is_standalone_payment',
-            'is_voided',
-            'order',
-            'owner',
-            'pending',
-            'source_data_pan',
-            'source_data_sub_type',
-            'source_data_type',
-            'success'
-        ];
+    return response()->json(['message' => 'ok']);
+}
 
-        $hmacString = '';
-        foreach ($fields as $field) {
-            $hmacString .= $data[$field] ?? '';
-        }
-
-        $calculatedHmac = hash_hmac('sha512', $hmacString, $hmacSecret);
-        if ($calculatedHmac !== ($data['hmac'] ?? '')) {
-            return response()->json(['error' => 'Invalid HMAC'], 403);
-        }
-
-        // ✅ Update order status
-        $order = Order::where('id', $data['merchant_order_id'])->first();
-        if ($order) {
-            if ($data['success'] === "true") {
-                $order->update(['status' => 'paid']);
-            } else {
-                $order->update(['status' => 'failed']);
-            }
-        }
-
-        return response()->json(['message' => 'ok']);
-    }
 }
