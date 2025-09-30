@@ -32,7 +32,8 @@ class OrderController extends Controller
                     'error'   => 'المنتج غير موجود',
                 ], 404);
             }
-            $shipping = Shipping::find($validated['shipping_id']);
+
+            $shipping = Shipping::find($validated['shipping_id'] ?? null);
             if (!$shipping) {
                 return response()->json([
                     'status'  => false,
@@ -40,16 +41,18 @@ class OrderController extends Controller
                     'error'   => 'المكان غير موجود',
                 ], 404);
             }
-            $ship = $shipping->price;
-            $priceField = $validated['price'];
-            $price = $product->{$priceField} + $ship ?? null;
-            if ($price === null) {
+
+            $priceField = $validated['price'] ?? null;
+            if (!isset($product->{$priceField})) {
                 return response()->json([
                     'status'  => false,
                     'message' => 'فشل في إنشاء الطلب',
                     'error'   => 'حقل السعر المحدد غير صالح لهذا المنتج',
                 ], 422);
             }
+
+            $shipPrice = $shipping->price ?? 0;
+            $price     = $product->{$priceField} + $shipPrice;
 
             $image1 = $request->file('image1')?->store('orders', 'public');
             $image2 = $request->file('image2')?->store('orders', 'public');
@@ -63,21 +66,28 @@ class OrderController extends Controller
                 'image1'           => $image1,
                 'image2'           => $image2,
                 'image3'           => $image3,
-                'child_attributes' => $validated['child_attributes'],
-                'educational_goal' => $validated['educational_goal'],
+                'child_attributes' => $validated['child_attributes'] ?? null,
+                'educational_goal' => $validated['educational_goal'] ?? null,
                 'price'            => $price,
                 'price_type'       => $priceField,
                 'shipping_id'      => $validated['shipping_id'],
-                'address'          => $validated['address'],
-                'phone'            => $validated['phone'],
-                'age'              => $validated['age'],
-                'gender'           => $validated['gender'],
+                'address'          => $validated['address'] ?? null,
+                'phone'            => $validated['phone'] ?? null,
+                'age'              => $validated['age'] ?? null,
+                'gender'           => $validated['gender'] ?? null,
                 'status'           => 'pending',
             ]);
 
             $paymob = new PaymobService();
             $token  = $paymob->authenticate();
+            if (!$token) {
+                throw new Exception("فشل في الاتصال بـ Paymob");
+            }
+
             $pmOrder = $paymob->createOrder($token, $price, $order->id);
+            if (!isset($pmOrder['id'])) {
+                throw new Exception("فشل في إنشاء طلب الدفع عبر Paymob");
+            }
 
             $billingData = [
                 "apartment"       => "803",
@@ -89,13 +99,16 @@ class OrderController extends Controller
                 "phone_number"    => $order->phone,
                 "shipping_method" => "PKG",
                 "postal_code"     => "01898",
-                "city"            => $order->shipping->name,
+                "city"            => $order->shipping->name ?? "Cairo",
                 "country"         => "EG",
                 "last_name"       => "User",
                 "state"           => "Cairo"
             ];
 
             $paymentKey = $paymob->generatePaymentKey($token, $pmOrder['id'], $price, $billingData);
+            if (!isset($paymentKey['token'])) {
+                throw new Exception("فشل في إنشاء مفتاح الدفع");
+            }
 
             $iframeId  = env('PAYMOB_IFRAME_ID');
             $iframeUrl = "https://accept.paymob.com/api/acceptance/iframes/$iframeId?payment_token=" . $paymentKey['token'];
@@ -108,6 +121,7 @@ class OrderController extends Controller
                     'payment_url' => $iframeUrl
                 ]
             ], 201);
+
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'status'  => false,
@@ -115,6 +129,7 @@ class OrderController extends Controller
                 'error'   => $e->errors(),
             ], 422);
         } catch (Exception $e) {
+            Log::error('Order creation error: ' . $e->getMessage());
             return response()->json([
                 'status'  => false,
                 'message' => 'فشل في إنشاء الطلب',
@@ -126,29 +141,36 @@ class OrderController extends Controller
     /**
      * Paymob Callback (Webhook)
      */
-    public function callback(Request $request)
+    public function callback(Request $request): JsonResponse
     {
-        $data = $request->all();
-        Log::info('Paymob Webhook:', $data);
-        $transaction = $data['obj'];
-        $merchantOrderId = $transaction['order']['merchant_order_id'] ?? null;
-        $paymobOrderId   = $transaction['order']['id'] ?? null;
-        $success         = $transaction['success'] ?? false;
-        if (!$merchantOrderId) {
-            return response()->json(['error' => 'No merchant_order_id'], 400);
-        }
-        $order = Order::find($merchantOrderId);
-        if (!$order) {
-            return response()->json(['error' => 'Order not found'], 404);
-        }
-        if ($success) {
+        try {
+            $data = $request->all();
+            Log::info('Paymob Webhook:', $data);
+
+            $transaction       = $data['obj'] ?? null;
+            $merchantOrderId   = $transaction['order']['merchant_order_id'] ?? null;
+            $paymobOrderId     = $transaction['order']['id'] ?? null;
+            $success           = $transaction['success'] ?? false;
+
+            if (!$merchantOrderId) {
+                return response()->json(['error' => 'No merchant_order_id'], 400);
+            }
+
+            $order = Order::find($merchantOrderId);
+            if (!$order) {
+                return response()->json(['error' => 'Order not found'], 404);
+            }
+
             $order->update([
-                'status'           => 'Pending_review',
+                'status'           => $success ? 'paid' : 'failed',
                 'paymob_order_id' => $paymobOrderId,
             ]);
-        } else {
-            $order->update(['status' => 'Cancelled']);
+
+            return response()->json(['message' => 'ok'], 200);
+
+        } catch (Exception $e) {
+            Log::error('Paymob callback error: ' . $e->getMessage());
+            return response()->json(['error' => $e->getMessage()], 500);
         }
-        return response()->json(['message' => 'ok'], 200);
     }
 }
