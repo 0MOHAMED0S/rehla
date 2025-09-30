@@ -31,4 +31,36 @@ class OrdersController extends Controller
             ], 500);
         }
     }
+    public function updateNote(Request $request, $order_id): JsonResponse
+    {
+        try {
+            $request->validate([
+                'note' => 'required|string|max:2000',
+            ]);
+
+            $order = Order::find($order_id);
+            if (!$order) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => 'الطلب غير موجود',
+                ], 404);
+            }
+
+            $order->update([
+                'note' => $request->note,
+            ]);
+
+            return response()->json([
+                'status'  => true,
+                'message' => 'تم تحديث ملاحظة الطلب بنجاح',
+                'order'   => $order,
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'حدث خطأ أثناء تحديث الملاحظة',
+                'error'   => config('app.debug') ? $e->getMessage() : null,
+            ], 500);
+        }
+    }
 }

@@ -23,9 +23,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/profile', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
+    $user = $request->user()->load('role'); // eager load role relation
 
+    return response()->json([
+        'user' => $user
+    ]);
+})->middleware('auth:sanctum');
 // Routes for guests (not authenticated)
 Route::middleware('guest')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
@@ -54,6 +57,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::put('/admin/aboutus/update', [AboutUsController::class, 'update']);
     Route::put('/admin/terms/update', [TermsOfUseController::class, 'update']);
     Route::get('/admin/orders', [OrdersController::class, 'index']);
+    Route::Put('/admin/orders/{order_id}/note', [OrdersController::class, 'updateNote']);
 
 });
 

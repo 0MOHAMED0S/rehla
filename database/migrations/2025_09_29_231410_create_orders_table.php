@@ -30,6 +30,7 @@ return new class extends Migration
         $table->enum('gender', ['male', 'female']);
         $table->enum('status', ['pending', 'paid', 'failed'])->default('pending');
         $table->string('paymob_order_id')->nullable();
+        $table->text('note')->nullable()->default(null);
         $table->timestamps();
     });
 }

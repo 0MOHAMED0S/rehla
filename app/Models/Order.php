@@ -26,7 +26,8 @@ class Order extends Model
         'age',
         'gender',
         'status',
-        'paymob_order_id'
+        'paymob_order_id',
+        'note'
     ];
     public function user()
     {
