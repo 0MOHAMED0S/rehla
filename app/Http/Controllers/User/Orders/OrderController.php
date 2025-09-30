@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Orders\StoreOrderRequest;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\Shipping;
 use App\Services\PaymobService;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -31,9 +32,17 @@ class OrderController extends Controller
                     'error'   => 'المنتج غير موجود',
                 ], 404);
             }
-
+            $shipping = Shipping::find($validated['shipping_id']);
+            if (!$shipping) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => 'فشل في إنشاء الطلب',
+                    'error'   => 'المكان غير موجود',
+                ], 404);
+            }
+            $ship = $shipping->price;
             $priceField = $validated['price'];
-            $price = $product->{$priceField} ?? null;
+            $price = $product->{$priceField} + $ship ?? null;
             if ($price === null) {
                 return response()->json([
                     'status'  => false,
@@ -58,7 +67,7 @@ class OrderController extends Controller
                 'educational_goal' => $validated['educational_goal'],
                 'price'            => $price,
                 'price_type'       => $priceField,
-                'governorate'      => $validated['governorate'],
+                'shipping_id'      => $validated['shipping_id'],
                 'address'          => $validated['address'],
                 'phone'            => $validated['phone'],
                 'age'              => $validated['age'],

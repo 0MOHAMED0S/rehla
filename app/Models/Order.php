@@ -20,7 +20,7 @@ class Order extends Model
         'child_attributes',
         'educational_goal',
         'price',
-        'governorate',
+        'shipping_id',
         'address',
         'phone',
         'age',

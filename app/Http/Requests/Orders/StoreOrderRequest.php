@@ -29,8 +29,8 @@ class StoreOrderRequest extends FormRequest
             'image3'           => 'required|image|mimes:jpg,jpeg,png|max:2048',
             'child_attributes' => 'required|string|min:3|max:5000',
             'educational_goal' => 'required|string|min:5|max:5000',
-            'price' => ['required', 'in:electronic_copy_price,fixed_price,printed_copy_price,offered_price'],
-            'governorate'      => 'required|string|min:2|max:255',
+            'price'            => ['required', 'in:electronic_copy_price,fixed_price,printed_copy_price,offered_price'],
+            'shipping_id'      => 'required|exists:shippings,id',
             'address'          => 'required|string|min:5|max:5000',
             'phone'            => 'required|string|regex:/^[0-9]{10,15}$/',
             'age'              => 'required|integer|min:1|max:18',
@@ -77,10 +77,10 @@ class StoreOrderRequest extends FormRequest
             'price.required' => 'حقل السعر مطلوب.',
             'price.in'       => 'السعر يجب أن يكون واحدًا من القيم التالية: electronic_copy_price, fixed_price, printed_copy_price, offered_price.',
 
-            'governorate.required' => 'المحافظة مطلوبة.',
-            'governorate.string'   => 'المحافظة يجب أن تكون نصاً.',
-            'governorate.min'      => 'المحافظة يجب أن تحتوي على حرفين على الأقل.',
-            'governorate.max'      => 'المحافظة يجب ألا تتجاوز 255 حرف.',
+
+            'shipping_id.required' => 'خدمة الشحن مطلوبة.',
+            'shipping_id.exists'   => 'خدمة الشحن المحددة غير موجودة.',
+
 
             'address.required' => 'العنوان مطلوب.',
             'address.string'   => 'العنوان يجب أن يكون نصاً.',

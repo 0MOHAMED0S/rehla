@@ -23,7 +23,7 @@ return new class extends Migration
         $table->text('child_attributes');
         $table->text('educational_goal');
         $table->decimal('price', 10, 2);
-        $table->string('governorate');
+        $table->foreignId('shipping_id')->constrained('shippings')->cascadeOnDelete();
         $table->text('address');
         $table->string('phone', 20);
         $table->integer('age');
