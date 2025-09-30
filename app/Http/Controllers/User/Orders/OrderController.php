@@ -125,9 +125,39 @@ class OrderController extends Controller
      */
 public function callback(Request $request)
 {
-    Log::info('Paymob Webhook:', $request->all());
+    $data = $request->all();
 
-    return response()->json(['message' => 'ok']);
+    Log::info('Paymob Webhook:', $data);
+
+    // 🔹 Use "obj" key for transaction info
+    $transaction = $data['obj'];
+
+    $merchantOrderId = $transaction['order']['merchant_order_id'] ?? null;
+    $paymobOrderId   = $transaction['order']['id'] ?? null;
+    $success         = $transaction['success'] ?? false;
+
+    if (!$merchantOrderId) {
+        return response()->json(['error' => 'No merchant_order_id'], 400);
+    }
+
+    $order = Order::find($merchantOrderId);
+
+    if (!$order) {
+        return response()->json(['error' => 'Order not found'], 404);
+    }
+
+    // ✅ Update order status
+    if ($success) {
+        $order->update([
+            'status'           => 'paid',
+            'payment_order_id' => $paymobOrderId,
+        ]);
+    } else {
+        $order->update(['status' => 'failed']);
+    }
+
+    return response()->json(['message' => 'ok'], 200);
 }
+
 
 }
