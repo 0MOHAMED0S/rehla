@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             LogoAndLinkSeeder::class,
             AboutUsSeeder::class,
             TermsOfUseSeeder::class,
+            SubscribeDetailSeeder::class,
         ]);
 
         User::updateOrCreate(

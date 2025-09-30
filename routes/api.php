@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AboutUs\AboutUsController;
 use App\Http\Controllers\Admin\BedaetElrehla\PackageController;
 use App\Http\Controllers\Admin\ContentCreator\ArticleController;
+use App\Http\Controllers\Admin\EnhaLak\SubscribeDetailController;
 use App\Http\Controllers\Admin\Users\RolesController;
 use App\Http\Controllers\Admin\Users\UsersController;
 use App\Http\Controllers\AuthController;
@@ -61,7 +62,9 @@ Route::middleware(['auth:sanctum', 'support'])->group(function () {
 
 Route::middleware(['auth:sanctum', 'enhalak'])->group(function () {
         Route::put('/admin/shipping/{id}', [ShippingController::class, 'update']);
+        Route::post('/admin/shipping', [ShippingController::class, 'store']);
         Route::apiResource('/admin/products', ProducController::class);
+        Route::put('admin/subscribe-detail', [SubscribeDetailController::class, 'update']);
 });
 
 Route::middleware(['auth:sanctum', 'bedaet'])->group(function () {
@@ -96,3 +99,6 @@ Route::get('/user/terms', [TermsOfUseController::class, 'index']);
 
 Route::middleware(['auth:sanctum'])->post('/user/order/{id}', [OrderController::class, 'store']);
 Route::post('/paymob/webhook', [OrderController::class, 'callback']);
+
+
+Route::get('admin/subscribe-detail', [SubscribeDetailController::class, 'index']);
