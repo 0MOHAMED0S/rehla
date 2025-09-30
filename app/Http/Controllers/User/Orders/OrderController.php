@@ -150,7 +150,7 @@ public function callback(Request $request)
     if ($success) {
         $order->update([
             'status'           => 'paid',
-            'payment_order_id' => $paymobOrderId,
+            'paymob_order_id' => $paymobOrderId,
         ]);
     } else {
         $order->update(['status' => 'failed']);
