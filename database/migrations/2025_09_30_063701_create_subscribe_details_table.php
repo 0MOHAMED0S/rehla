@@ -18,6 +18,7 @@ return new class extends Migration
             $table->integer('price');
             $table->string('image');
             $table->text('features');
+            $table->text('note')->nullable()->default(null);
             $table->timestamps();
         });
     }
@@ -25,6 +26,7 @@ return new class extends Migration
     /**
      * Reverse the migrations.
      */
+    
     public function down(): void
     {
         Schema::dropIfExists('subscribe_details');

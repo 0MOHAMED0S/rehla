@@ -23,7 +23,6 @@ class OrderController extends Controller
         try {
             $validated = $request->validated();
 
-            // ✅ Check product
             $product = Product::find($product_id);
             if (!$product) {
                 return response()->json([
@@ -33,7 +32,6 @@ class OrderController extends Controller
                 ], 404);
             }
 
-            // ✅ Get price
             $priceField = $validated['price'];
             $price = $product->{$priceField} ?? null;
             if ($price === null) {
@@ -44,12 +42,10 @@ class OrderController extends Controller
                 ], 422);
             }
 
-            // ✅ Upload images
             $image1 = $request->file('image1')?->store('orders', 'public');
             $image2 = $request->file('image2')?->store('orders', 'public');
             $image3 = $request->file('image3')?->store('orders', 'public');
 
-            // ✅ Create "pending" order
             $order = Order::create([
                 'name'             => $validated['name'],
                 'children_id'      => $validated['children_id'] ?? null,
@@ -67,10 +63,9 @@ class OrderController extends Controller
                 'phone'            => $validated['phone'],
                 'age'              => $validated['age'],
                 'gender'           => $validated['gender'],
-                'status'           => 'pending', // ✅ default status
+                'status'           => 'pending',
             ]);
 
-            // ✅ Paymob Integration
             $paymob = new PaymobService();
             $token  = $paymob->authenticate();
             $pmOrder = $paymob->createOrder($token, $price, $order->id);
@@ -104,7 +99,6 @@ class OrderController extends Controller
                     'payment_url' => $iframeUrl
                 ]
             ], 201);
-
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'status'  => false,
@@ -123,41 +117,29 @@ class OrderController extends Controller
     /**
      * Paymob Callback (Webhook)
      */
-public function callback(Request $request)
-{
-    $data = $request->all();
-
-    Log::info('Paymob Webhook:', $data);
-
-    // 🔹 Use "obj" key for transaction info
-    $transaction = $data['obj'];
-
-    $merchantOrderId = $transaction['order']['merchant_order_id'] ?? null;
-    $paymobOrderId   = $transaction['order']['id'] ?? null;
-    $success         = $transaction['success'] ?? false;
-
-    if (!$merchantOrderId) {
-        return response()->json(['error' => 'No merchant_order_id'], 400);
+    public function callback(Request $request)
+    {
+        $data = $request->all();
+        Log::info('Paymob Webhook:', $data);
+        $transaction = $data['obj'];
+        $merchantOrderId = $transaction['order']['merchant_order_id'] ?? null;
+        $paymobOrderId   = $transaction['order']['id'] ?? null;
+        $success         = $transaction['success'] ?? false;
+        if (!$merchantOrderId) {
+            return response()->json(['error' => 'No merchant_order_id'], 400);
+        }
+        $order = Order::find($merchantOrderId);
+        if (!$order) {
+            return response()->json(['error' => 'Order not found'], 404);
+        }
+        if ($success) {
+            $order->update([
+                'status'           => 'Pending_review',
+                'paymob_order_id' => $paymobOrderId,
+            ]);
+        } else {
+            $order->update(['status' => 'Cancelled']);
+        }
+        return response()->json(['message' => 'ok'], 200);
     }
-
-    $order = Order::find($merchantOrderId);
-
-    if (!$order) {
-        return response()->json(['error' => 'Order not found'], 404);
-    }
-
-    // ✅ Update order status
-    if ($success) {
-        $order->update([
-            'status'           => 'paid',
-            'paymob_order_id' => $paymobOrderId,
-        ]);
-    } else {
-        $order->update(['status' => 'failed']);
-    }
-
-    return response()->json(['message' => 'ok'], 200);
-}
-
-
 }
