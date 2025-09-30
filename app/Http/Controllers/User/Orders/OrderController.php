@@ -89,7 +89,7 @@ class OrderController extends Controller
                 "phone_number"    => $order->phone,
                 "shipping_method" => "PKG",
                 "postal_code"     => "01898",
-                "city"            => $order->governorate,
+                "city"            => $order->shipping->name,
                 "country"         => "EG",
                 "last_name"       => "User",
                 "state"           => "Cairo"

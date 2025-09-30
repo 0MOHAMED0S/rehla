@@ -12,4 +12,9 @@ class Shipping extends Model
         'name',
         'price',
     ];
+    public function orders()
+{
+    return $this->hasMany(Order::class, 'shipping_id');
+}
+
 }
