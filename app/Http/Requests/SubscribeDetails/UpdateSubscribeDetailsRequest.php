@@ -25,7 +25,7 @@ class UpdateSubscribeDetailsRequest extends FormRequest
             'title'       => 'sometimes|required|string|min:3|max:255',
             'description' => 'sometimes|required|string|min:10',
             'price'       => 'sometimes|required|integer|min:0',
-            'image'       => 'sometimes|required|string',
+            'image'       => 'sometimes|required|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
             'features'    => 'sometimes|required|string|min:5',
         ];
     }
@@ -47,11 +47,13 @@ class UpdateSubscribeDetailsRequest extends FormRequest
             'price.min'            => 'السعر يجب أن يكون أكبر من أو يساوي 0.',
 
             'image.required'       => 'الصورة مطلوبة عند الإرسال.',
-            'image.string'         => 'رابط الصورة يجب أن يكون نصًا.',
+            'image.image'          => 'يجب أن تكون القيمة ملف صورة صالحًا.',
+            'image.mimes'          => 'امتدادات الصورة المسموح بها: jpeg, png, jpg, gif, svg, webp.',
+            'image.max'            => 'حجم الصورة يجب ألا يتجاوز 2 ميغابايت.',
 
             'features.required'    => 'المميزات مطلوبة عند الإرسال.',
             'features.string'      => 'المميزات يجب أن تكون نصًا.',
-            'features.min'         => 'المميزات يجب أن تحتوي على 5 أحرف على الأقل.',
+            'features.min'         => 'المميزات يجب أن تحتوي على 5 أحراف على الأقل.',
         ];
     }
 }
