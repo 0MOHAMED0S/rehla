@@ -23,7 +23,7 @@ class StoreOrderRequest extends FormRequest
     {
         return [
             'name'             => 'required|string|min:3|max:255',
-            'children_id'      => 'nullable|exists:users,id',
+            'children_id'      => 'nullable',
             'image1'           => 'required|image|mimes:jpg,jpeg,png|max:2048',
             'image2'           => 'required|image|mimes:jpg,jpeg,png|max:2048',
             'image3'           => 'required|image|mimes:jpg,jpeg,png|max:2048',
