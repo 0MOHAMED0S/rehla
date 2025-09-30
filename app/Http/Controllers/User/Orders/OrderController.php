@@ -162,7 +162,7 @@ class OrderController extends Controller
             }
 
             $order->update([
-                'status'           => $success ? 'paid' : 'failed',
+                'status'           => $success ? 'pending_review' : 'cancelled',
                 'paymob_order_id' => $paymobOrderId,
             ]);
 
