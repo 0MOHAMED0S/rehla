@@ -23,17 +23,18 @@ return new class extends Migration
         $table->text('child_attributes');
         $table->text('educational_goal');
         $table->decimal('price', 10, 2);
-        $table->foreignId('shipping_id')->constrained('shippings')->cascadeOnDelete();
-        $table->text('address');
-        $table->string('phone', 20);
-        $table->integer('age');
-        $table->enum('gender', ['male', 'female']);
         $table->enum('price_type', [
                 'electronic_copy_price',
                 'fixed_price',
                 'printed_copy_price',
                 'offered_price'
             ])->nullable();
+        $table->foreignId('shipping_id')->constrained('shippings')->cascadeOnDelete();
+        $table->text('address');
+        $table->string('phone', 20);
+        $table->integer('age');
+        $table->enum('gender', ['male', 'female']);
+        $table->enum('status', ['pending', 'paid', 'failed'])->default('pending');
         $table->string('paymob_order_id')->nullable();
         $table->text('note')->nullable()->default(null);
         $table->timestamps();
