@@ -84,10 +84,13 @@ class OrderController extends Controller
                 throw new Exception("فشل في الاتصال بـ Paymob");
             }
 
-            $pmOrder = $paymob->createOrder($token, $price, $order->id);
-            if (!isset($pmOrder['id'])) {
-                throw new Exception("فشل في إنشاء طلب الدفع عبر Paymob");
-            }
+            $pmOrder = $paymob->createOrder($token, $price * 100, $order->id);
+Log::info('Paymob Create Order Response:', $pmOrder);
+
+if (!isset($pmOrder['id'])) {
+    throw new Exception("فشل في إنشاء طلب الدفع عبر Paymob - Response: " . json_encode($pmOrder));
+}
+
 
             $billingData = [
                 "apartment"       => "803",
