@@ -3,56 +3,95 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Exception;
+use Illuminate\Support\Str;
 
 class PaymobService
 {
-    private $baseUrl;
-    private $apiKey;
+    protected $baseUrl;
+    protected $apiKey;
+    protected $integrationId;
 
     public function __construct()
     {
-        $this->baseUrl = config('services.paymob.base_url', env('PAYMOB_BASE_URL'));
-        $this->apiKey  = env('PAYMOB_API_KEY');
+        $this->baseUrl       = "https://accept.paymob.com/api";
+        $this->apiKey        = env("PAYMOB_API_KEY");
+        $this->integrationId = env("PAYMOB_INTEGRATION_ID"); // لازم يكون عندك في .env
     }
 
-    // 1. Authentication (Get Token)
+    /**
+     * Authenticate and get token
+     */
     public function authenticate()
     {
-        $response = Http::post($this->baseUrl . '/auth/tokens', [
-            'api_key' => $this->apiKey
-        ]);
+        try {
+            $response = Http::post("{$this->baseUrl}/auth/tokens", [
+                "api_key" => $this->apiKey
+            ]);
 
-        return $response->json()['token'] ?? null;
+            $data = $response->json();
+            Log::info("Paymob Auth Response: ", $data);
+
+            return $data['token'] ?? null;
+        } catch (Exception $e) {
+            Log::error("Paymob Auth Error: " . $e->getMessage());
+            return null;
+        }
     }
 
-    // 2. Create Order
-    public function createOrder($authToken, $amount, $merchantOrderId)
+    /**
+     * Create Order in Paymob
+     */
+    public function createOrder($token, $amount, $merchantOrderId)
     {
-        $response = Http::post($this->baseUrl . '/ecommerce/orders', [
-            'auth_token'      => $authToken,
-            'delivery_needed' => false,
-            'amount_cents'    => $amount * 100, // Paymob يعمل بالسنت
-            'currency'        => 'EGP',
-            'merchant_order_id' => $merchantOrderId,
-            'items'           => []
-        ]);
+        try {
+            // توليد merchant_order_id فريد عشان نتجنب مشكلة duplicate
+            $uniqueOrderId = $merchantOrderId . '-' . Str::uuid();
 
-        return $response->json();
+            $response = Http::withToken($token)->post("{$this->baseUrl}/ecommerce/orders", [
+                "auth_token"        => $token,
+                "delivery_needed"   => "false",
+                "amount_cents"      => (int)($amount * 100), // السعر بالقروش
+                "currency"          => "EGP",
+                "merchant_order_id" => $uniqueOrderId,
+                "items"             => []
+            ]);
+
+            $data = $response->json();
+            Log::info("Paymob Create Order Response:", $data);
+
+            return $data;
+        } catch (Exception $e) {
+            Log::error("Paymob Create Order Error: " . $e->getMessage());
+            return null;
+        }
     }
 
-    // 3. Generate Payment Key
-    public function generatePaymentKey($authToken, $orderId, $amount, $billingData)
+    /**
+     * Generate Payment Key
+     */
+    public function generatePaymentKey($token, $orderId, $amount, $billingData)
     {
-        $response = Http::post($this->baseUrl . '/acceptance/payment_keys', [
-            'auth_token' => $authToken,
-            'amount_cents' => $amount * 100,
-            'expiration'   => 3600,
-            'order_id'     => $orderId,
-            'billing_data' => $billingData,
-            'currency'     => 'EGP',
-            'integration_id' => env('PAYMOB_INTEGRATION_ID'),
-        ]);
+        try {
+            $response = Http::withToken($token)->post("{$this->baseUrl}/acceptance/payment_keys", [
+                "auth_token" => $token,
+                "amount_cents" => (int)($amount * 100),
+                "expiration" => 3600,
+                "order_id" => $orderId,
+                "billing_data" => $billingData,
+                "currency" => "EGP",
+                "integration_id" => $this->integrationId,
+                "lock_order_when_paid" => "true"
+            ]);
 
-        return $response->json();
+            $data = $response->json();
+            Log::info("Paymob Payment Key Response:", $data);
+
+            return $data;
+        } catch (Exception $e) {
+            Log::error("Paymob Payment Key Error: " . $e->getMessage());
+            return null;
+        }
     }
 }
