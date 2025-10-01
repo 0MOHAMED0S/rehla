@@ -63,7 +63,13 @@ class UsersController extends Controller
     public function show($id)
     {
         try {
-            $user = User::with('role')->find($id);
+            $user = User::with([
+                'role',
+                'orders' => function ($query) {
+                    $query->select('id', 'user_id', 'product_id', 'price', 'status', 'created_at')
+                        ->with(['product:id,name']);
+                }
+            ])->find($id);
 
             if (! $user) {
                 return response()->json([
@@ -85,6 +91,8 @@ class UsersController extends Controller
             ], 500);
         }
     }
+
+
 
 
     public function update(UpdateUserRequest $request, $id)
