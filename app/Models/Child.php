@@ -7,9 +7,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Child extends Model
 {
-        use HasFactory;
+    use HasFactory;
 
-        protected $fillable = [
+    protected $fillable = [
         'user_id',
         'parent_id',
         'age',
@@ -26,5 +26,9 @@ class Child extends Model
     public function parent()
     {
         return $this->belongsTo(User::class, 'parent_id');
+    }
+    public function childUser()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }
