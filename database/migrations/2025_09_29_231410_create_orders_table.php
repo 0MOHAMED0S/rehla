@@ -34,7 +34,7 @@ return new class extends Migration
                 'fixed_price',
                 'printed_copy_price',
                 'offered_price'
-            ])->after('price')->nullable();
+            ])->nullable();
         $table->string('paymob_order_id')->nullable();
         $table->text('note')->nullable()->default(null);
         $table->timestamps();
