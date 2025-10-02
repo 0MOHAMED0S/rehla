@@ -35,18 +35,18 @@ class Order extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function child()
-    {
-        return $this->belongsTo(User::class, 'children_id');
-    }
+public function child()
+{
+    return $this->belongsTo(Child::class, 'children_id');
+}
+
 
     public function product()
     {
         return $this->belongsTo(Product::class);
     }
     public function shipping()
-{
-    return $this->belongsTo(Shipping::class, 'shipping_id');
-}
-
+    {
+        return $this->belongsTo(Shipping::class, 'shipping_id');
+    }
 }
