@@ -71,6 +71,8 @@ Route::middleware(['auth:sanctum', 'enhalak'])->group(function () {
         Route::post('/admin/shipping', [ShippingController::class, 'store']);
         Route::apiResource('/admin/products', ProducController::class);
         Route::put('admin/subscribe-detail', [SubscribeDetailController::class, 'update']);
+        Route::get('admin/orders/{id}', [OrdersController::class, 'showOrderDetails']);
+
 });
 
 Route::middleware(['auth:sanctum', 'bedaet'])->group(function () {

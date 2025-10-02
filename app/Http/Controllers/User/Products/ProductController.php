@@ -13,6 +13,7 @@ class ProductController extends Controller
     {
         try {
             $products = Product::where('status', 1)
+                ->select('id', 'name', 'price', 'status') // 👈 explicitly include status
                 ->latest()
                 ->paginate(10);
 
@@ -29,14 +30,13 @@ class ProductController extends Controller
             ], 500);
         }
     }
+
     public function show($id): JsonResponse
     {
         try {
-            $product = Product::where('id', $id)
-                ->where('status', 1)
-                ->first();
+            $product = Product::find($id);
 
-            if (!$product) {
+            if (!$product || $product->status == 0) {
                 return response()->json([
                     'status'  => false,
                     'message' => 'المنتج غير موجود',
