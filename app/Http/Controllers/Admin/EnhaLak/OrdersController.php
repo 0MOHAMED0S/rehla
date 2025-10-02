@@ -63,49 +63,58 @@ class OrdersController extends Controller
             ], 500);
         }
     }
-    public function showOrderDetails($id)
+public function showOrderDetails($id)
 {
     try {
         $order = Order::with([
-            'user:id,name,email',                // الأب
-            'child.user:id,name,email',          // الطفل
-            'product:id,name,description',       // المنتج
-            'shipping:id,name,price'             // الشحن
+            'user',        // ولي الأمر
+            'child.user',  // الطفل مع بيانات اليوزر
+            'product',
+            'shipping'
         ])->find($id);
 
-        if (!$order) {
+        if (! $order) {
             return response()->json([
                 'status'  => false,
-                'message' => 'الطلب غير موجود',
+                'message' => 'الطلب غير موجود'
             ], 404);
         }
 
         return response()->json([
             'status'  => true,
             'message' => 'تم جلب تفاصيل الطلب بنجاح',
-            'data'    => [
-                'order' => [
-                    'id'          => $order->id,
-                    'name'        => $order->name,
-                    'status'      => $order->status,
-                    'price'       => $order->price,       // السعر النهائي المخزن في الطلب
-                    'price_type'  => $order->price_type,  // نوع السعر المستخدم
-                    'created_at'  => $order->created_at,
-                ],
-                'parent'  => $order->user,
-                'child'   => $order->child?->user,
-                'product' => $order->product,
-                'shipping'=> $order->shipping,
-            ]
+            'order'   => $order, // كل بيانات الطلب زي ما هي
+            'parent'  => $order->user ? [
+                'id'    => $order->user->id,
+                'name'  => $order->user->name,
+                'email' => $order->user->email,
+            ] : null,
+            'child'   => $order->child ? [
+                'id'    => $order->child->id,
+                'name'  => $order->child->user->name ?? null,
+                'age'   => $order->child->age,
+                'gender'=> $order->child->gender,
+            ] : null,
+            'product' => $order->product ? [
+                'id'    => $order->product->id,
+                'name'  => $order->product->name,
+                'price' => $order->product->fixed_price,
+            ] : null,
+            'shipping' => $order->shipping ? [
+                'id'   => $order->shipping->id,
+                'name' => $order->shipping->name,
+                'price'=> $order->shipping->price,
+            ] : null,
         ], 200);
 
-    } catch (Exception $e) {
+    } catch (\Exception $e) {
         return response()->json([
             'status'  => false,
             'message' => 'فشل في جلب تفاصيل الطلب',
-            'error'   => $e->getMessage(),
+            'error'   => $e->getMessage()
         ], 500);
     }
 }
+
 
 }
