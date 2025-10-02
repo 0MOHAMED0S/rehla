@@ -13,7 +13,6 @@ class ProductController extends Controller
     {
         try {
             $products = Product::where('status', 1)
-                ->select('id', 'name', 'price', 'status') // 👈 explicitly include status
                 ->latest()
                 ->paginate(10);
 
