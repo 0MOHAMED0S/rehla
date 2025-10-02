@@ -98,7 +98,6 @@ public function showOrderDetails($id)
             'product' => $order->product ? [
                 'id'    => $order->product->id,
                 'name'  => $order->product->name,
-                'price' => $order->product->fixed_price,
             ] : null,
             'shipping' => $order->shipping ? [
                 'id'   => $order->shipping->id,
@@ -107,7 +106,7 @@ public function showOrderDetails($id)
             ] : null,
         ], 200);
 
-    } catch (\Exception $e) {
+    } catch (Exception $e) {
         return response()->json([
             'status'  => false,
             'message' => 'فشل في جلب تفاصيل الطلب',
