@@ -34,5 +34,13 @@ class Subscriber extends Model
 {
     return $this->belongsTo(User::class);
 }
+  public function shipping()
+    {
+        return $this->belongsTo(Shipping::class);
+    }
 
+    public function subscribeDetail()
+    {
+        return $this->belongsTo(SubscribeDetails::class, 'subscribe_id', 'id');
+    }
 }
