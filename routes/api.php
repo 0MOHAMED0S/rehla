@@ -44,7 +44,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/user/children', [ChildController::class, 'store']);
     Route::get('/user/children/check', [ChildController::class, 'checkChildren']);
 Route::post('user/subscriber', [SubscribeController::class, 'store']);
-    Route::get('user/my-subscription', [SubscribeController::class, 'getMySubscription']);
+    Route::get('user/my-subscription', [SubscribeController::class, 'getMySubscriptions']);
 
 });
 Route::post('user/subscriber/callback', [SubscribeController::class, 'callback']);
