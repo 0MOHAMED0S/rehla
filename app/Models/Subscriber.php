@@ -30,4 +30,9 @@ class Subscriber extends Model
         'subscribed_at',
         'expired_at',
     ];
+    public function user()
+{
+    return $this->belongsTo(User::class);
+}
+
 }

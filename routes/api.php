@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\Contacts\ContactController;
 use App\Http\Controllers\Admin\EnhaLak\ProducController;
 use App\Http\Controllers\Admin\LogoAndLink\LogoAndLinkController;
 use App\Http\Controllers\Admin\Shipping\ShippingController;
+use App\Http\Controllers\Admin\Subscribers\SubscribeController as SubscribersSubscribeController;
 use App\Http\Controllers\Admin\TermsOfUse\TermsOfUseController;
 use App\Http\Controllers\Admin\Trainers\TrainerController;
 use App\Http\Controllers\User\Child\ChildController;
@@ -74,7 +75,7 @@ Route::middleware(['auth:sanctum', 'enhalak'])->group(function () {
         Route::apiResource('/admin/products', ProducController::class);
         Route::put('admin/subscribe-detail', [SubscribeDetailController::class, 'update']);
         Route::get('admin/orders/{id}', [OrdersController::class, 'showOrderDetails']);
-
+        Route::get('admin/subscribers', [SubscribersSubscribeController::class, 'index']);
 });
 
 Route::middleware(['auth:sanctum', 'bedaet'])->group(function () {
