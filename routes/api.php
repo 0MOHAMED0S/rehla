@@ -19,6 +19,7 @@ use App\Http\Controllers\User\Contacts\ContactController as UserContactControlle
 use App\Http\Controllers\User\LogoAndLink\LogoAndLinkController as UserLogoAndLinkController;
 use App\Http\Controllers\User\Orders\OrderController as UserOrderController ;
 use App\Http\Controllers\User\Products\ProductController  as UserProductController;
+use App\Http\Controllers\User\Subscribers\SubscribeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -40,9 +41,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/user/children', [ChildController::class, 'store']);
     Route::get('/user/children/check', [ChildController::class, 'checkChildren']);
-
-
+Route::post('user/subscriber', [SubscribeController::class, 'store']);
 });
+Route::post('user/subscriber/callback', [SubscribeController::class, 'callback']);
 
 //Author
 Route::middleware(['auth:sanctum', 'author'])->group(function () {
@@ -110,3 +111,4 @@ Route::post('/paymob/webhook', [UserOrderController::class, 'callback']);
 
 
 Route::get('admin/subscribe-detail', [SubscribeDetailController::class, 'index']);
+
