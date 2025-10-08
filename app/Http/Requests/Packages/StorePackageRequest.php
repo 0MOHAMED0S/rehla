@@ -24,7 +24,6 @@ class StorePackageRequest extends FormRequest
         return [
             'name'            => 'required|string|min:3|max:255|unique:packages,name',
             'sessions'        => 'required|string|min:2|max:255',
-            'price'           => 'required|numeric|min:1|max:100000',
             'features'        => 'required|string|min:3|max:5000',
             'is_most_popular' => 'boolean',
             'status'          => 'sometimes|in:0,1',

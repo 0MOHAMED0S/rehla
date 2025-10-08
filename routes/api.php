@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\EnhaLak\ProducController;
 use App\Http\Controllers\Admin\LogoAndLink\LogoAndLinkController;
 use App\Http\Controllers\Admin\Shipping\ShippingController;
 use App\Http\Controllers\Admin\TermsOfUse\TermsOfUseController;
+use App\Http\Controllers\Admin\Trainers\TrainerController;
 use App\Http\Controllers\User\Child\ChildController;
 use App\Http\Controllers\User\Contacts\ContactController as UserContactController;
 use App\Http\Controllers\User\LogoAndLink\LogoAndLinkController as UserLogoAndLinkController;
@@ -112,3 +113,5 @@ Route::post('/paymob/webhook', [UserOrderController::class, 'callback']);
 
 Route::get('admin/subscribe-detail', [SubscribeDetailController::class, 'index']);
 
+Route::post('admin/trainers', [TrainerController::class, 'store']);
+Route::get('admin/trainers', [TrainerController::class, 'index']);

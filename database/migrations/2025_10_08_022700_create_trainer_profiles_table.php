@@ -11,13 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('packages', function (Blueprint $table) {
+        Schema::create('trainer_profiles', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique();
-            $table->string('sessions');
-            $table->text('features');
-            $table->boolean('is_most_popular')->default(false);
-            $table->tinyInteger('status')->default(1);
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->string('specialization');
+            $table->string('slug')->unique();
+            $table->text('bio');
+            $table->string('image');
+            $table->boolean('status')->default(0);
             $table->timestamps();
         });
     }
@@ -27,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('packages');
+        Schema::dropIfExists('trainer_profiles');
     }
 };

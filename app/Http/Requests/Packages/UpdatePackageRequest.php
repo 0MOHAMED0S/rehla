@@ -23,7 +23,6 @@ class UpdatePackageRequest extends FormRequest
                 Rule::unique('packages', 'name')->ignore($this->package), // استثناء الباقة الحالية
             ],
             'sessions'        => 'sometimes|string|min:2|max:255',
-            'price'           => 'sometimes|numeric|min:1|max:100000',
             'features'        => 'sometimes|string|min:3|max:5000',
             'is_most_popular' => 'sometimes|boolean',
             'status'          => 'sometimes|in:0,1',

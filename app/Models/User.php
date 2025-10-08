@@ -65,5 +65,8 @@ class User extends Authenticatable
 {
     return $this->hasMany(Order::class, 'user_id');
 }
-
+public function trainerProfile()
+    {
+        return $this->hasOne(TrainerProfile::class);
+    }
 }
