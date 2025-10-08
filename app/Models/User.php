@@ -69,4 +69,9 @@ public function trainerProfile()
     {
         return $this->hasOne(TrainerProfile::class);
     }
+    public function subscriber()
+{
+    return $this->hasOne(Subscriber::class);
+}
+
 }
