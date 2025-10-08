@@ -168,4 +168,32 @@ public function store(StoreSubscriberRequest $request): JsonResponse
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
+
+    public function getMySubscription()
+{
+    $user = Auth::user();
+
+    // Find the subscriber record linked to the logged-in user
+    $subscriber = Subscriber::with(['shipping', 'subscribeDetail'])
+        ->where('user_id', $user->id)
+        ->latest()
+        ->first();
+
+    if (!$subscriber) {
+        return response()->json([
+            'status'  => false,
+            'message' => 'لم يتم العثور على اشتراك لهذا المستخدم',
+        ], 404);
+    }
+
+    return response()->json([
+        'status'  => true,
+        'message' => 'تم جلب بيانات الاشتراك بنجاح',
+        'data'    => [
+            'subscriber' => $subscriber,
+            'user'       => $user,
+        ],
+    ]);
+}
 }

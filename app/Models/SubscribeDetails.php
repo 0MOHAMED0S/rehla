@@ -16,4 +16,8 @@ class SubscribeDetails extends Model
         'image',
         'features',
     ];
+    public function subscribers()
+    {
+        return $this->hasMany(Subscriber::class, 'subscribe_id');
+    }
 }
