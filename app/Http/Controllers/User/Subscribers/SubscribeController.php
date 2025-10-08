@@ -169,30 +169,43 @@ public function store(StoreSubscriberRequest $request): JsonResponse
         }
     }
 
-
-    public function getMySubscription()
+public function getMySubscriptions(Request $request)
 {
     $user = Auth::user();
 
-    // Find the subscriber record linked to the logged-in user
-    $subscriber = Subscriber::with(['shipping', 'subscribeDetail'])
-        ->where('user_id', $user->id)
-        ->latest()
-        ->first();
+    $status = $request->query('status'); // Optional filter: active, expired, failed
 
-    if (!$subscriber) {
+    // Query all subscriptions for the logged-in user
+    $query = Subscriber::with(['shipping', 'subscribeDetail'])
+        ->where('user_id', $user->id)
+        ->orderBy('created_at', 'desc');
+
+    if ($status) {
+        $query->where('status', $status);
+    }
+
+    $subscriptions = $query->get();
+
+    if ($subscriptions->isEmpty()) {
         return response()->json([
             'status'  => false,
-            'message' => 'لم يتم العثور على اشتراك لهذا المستخدم',
+            'message' => 'لم يتم العثور على أي اشتراكات لهذا المستخدم',
         ], 404);
     }
 
+    // Mark which ones are expired
+    $subscriptions->transform(function ($sub) {
+        $sub->is_expired = $sub->expired_at && $sub->expired_at < now();
+        $sub->remaining_days = $sub->is_expired ? 0 : now()->diffInDays($sub->expired_at, false);
+        return $sub;
+    });
+
     return response()->json([
         'status'  => true,
-        'message' => 'تم جلب بيانات الاشتراك بنجاح',
+        'message' => 'تم جلب جميع الاشتراكات بنجاح',
         'data'    => [
-            'subscriber' => $subscriber,
-            'user'       => $user,
+            'user'          => $user,
+            'subscriptions' => $subscriptions,
         ],
     ]);
 }
