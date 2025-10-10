@@ -8,6 +8,7 @@ use App\Models\TrainerProfile;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class TrainerController extends Controller
@@ -22,6 +23,8 @@ public function store(Request $request)
             'slug'            => 'required|string|unique:trainer_profiles,slug',
             'bio'             => 'required|string',
             'image'           => 'required|image|max:2048',
+                    'price'           => 'required|numeric|min:0',
+
         ]);
 
         // Find instructor role id
@@ -47,6 +50,7 @@ public function store(Request $request)
             'slug'           => Str::slug($request->slug),
             'bio'            => $request->bio,
             'image'          => $imagePath,
+                        'price'            => $request->price,
         ]);
 
         return response()->json([
@@ -68,4 +72,57 @@ public function store(Request $request)
             'data'    => $instructors,
         ]);
     }
+public function update(Request $request, $id)
+{
+    $user = User::with('trainerProfile')->findOrFail($id);
+
+    if (!$user->trainerProfile) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Trainer profile not found for this user.'
+        ], 404);
+    }
+
+    $trainerProfile = $user->trainerProfile;
+
+    $request->validate([
+        'name'           => 'sometimes|string|max:255',
+        'email'          => 'sometimes|email|unique:users,email,' . $user->id,
+        'specialization' => 'sometimes|string|max:255',
+        'slug'           => 'sometimes|string|unique:trainer_profiles,slug,' . $trainerProfile->id,
+        'bio'            => 'sometimes|string',
+        'image'          => 'nullable|image|max:2048',
+        'price'          => 'sometimes|numeric|min:0',
+    ]);
+
+    $user->update([
+        'name'  => $request->name ?? $user->name,
+        'email' => $request->email ?? $user->email,
+    ]);
+
+    if ($request->hasFile('image')) {
+        if ($trainerProfile->image && Storage::disk('public')->exists($trainerProfile->image)) {
+            Storage::disk('public')->delete($trainerProfile->image);
+        }
+
+        $trainerProfile->image = $request->file('image')->store('trainers', 'public');
+    }
+
+    $trainerProfile->update([
+        'specialization' => $request->specialization ?? $trainerProfile->specialization,
+        'slug'           => $request->slug ? Str::slug($request->slug) : $trainerProfile->slug,
+        'bio'            => $request->bio ?? $trainerProfile->bio,
+        'price'          => $request->price ?? $trainerProfile->price,
+    ]);
+
+    return response()->json([
+        'status'  => true,
+        'message' => 'تم تحديث بيانات المدرب بنجاح',
+        'data'    => $user->load('trainerProfile'),
+    ]);
+}
+
+
+
+
 }

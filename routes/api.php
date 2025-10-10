@@ -16,12 +16,15 @@ use App\Http\Controllers\Admin\Shipping\ShippingController;
 use App\Http\Controllers\Admin\Subscribers\SubscribeController as SubscribersSubscribeController;
 use App\Http\Controllers\Admin\TermsOfUse\TermsOfUseController;
 use App\Http\Controllers\Admin\Trainers\TrainerController;
+use App\Http\Controllers\PriceEquationController;
+use App\Http\Controllers\TrainerScheduleController;
 use App\Http\Controllers\User\Child\ChildController;
 use App\Http\Controllers\User\Contacts\ContactController as UserContactController;
 use App\Http\Controllers\User\LogoAndLink\LogoAndLinkController as UserLogoAndLinkController;
 use App\Http\Controllers\User\Orders\OrderController as UserOrderController ;
 use App\Http\Controllers\User\Products\ProductController  as UserProductController;
 use App\Http\Controllers\User\Subscribers\SubscribeController;
+use App\Models\TrainerSchedule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -46,6 +49,10 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::post('user/subscriber', [SubscribeController::class, 'store']);
     Route::get('user/my-subscription', [SubscribeController::class, 'getMySubscriptions']);
 
+        Route::post('trainer/schedule', [TrainerScheduleController::class, 'store']);
+    Route::get('trainer/schedule/my', [TrainerScheduleController::class, 'mySchedules']);
+
+
 });
 Route::post('user/subscriber/callback', [SubscribeController::class, 'callback']);
 
@@ -63,7 +70,8 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::put('/admin/terms/update', [TermsOfUseController::class, 'update']);
     Route::get('/admin/orders', [OrdersController::class, 'index']);
     Route::Put('/admin/orders/{order_id}/note', [OrdersController::class, 'updateNote']);
-
+Route::get('admin/price-equation', [PriceEquationController::class, 'index']);
+Route::put('admin/price-equation', [PriceEquationController::class, 'update']);
 });
 
 Route::middleware(['auth:sanctum', 'support'])->group(function () {
@@ -81,9 +89,15 @@ Route::middleware(['auth:sanctum', 'enhalak'])->group(function () {
 });
 
 Route::middleware(['auth:sanctum', 'bedaet'])->group(function () {
-        Route::apiResource('/admin/packages', PackageController::class);
+Route::apiResource('/admin/packages', PackageController::class);
+Route::get('/admin/trainer-schedules/pending', [TrainerScheduleController::class, 'pending']);
+Route::put('/admin/trainer-schedules/{id}', [TrainerScheduleController::class, 'update']);
+Route::put('/admin/trainers/{id}', [TrainerController::class, 'update']);
 
 });
+
+
+
 
 //articles
 Route::get('user/articles', [UserArticleController::class, 'index']);
@@ -118,3 +132,4 @@ Route::get('admin/subscribe-detail', [SubscribeDetailController::class, 'index']
 
 Route::post('admin/trainers', [TrainerController::class, 'store']);
 Route::get('admin/trainers', [TrainerController::class, 'index']);
+

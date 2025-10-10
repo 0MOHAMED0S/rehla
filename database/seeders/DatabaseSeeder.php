@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             AboutUsSeeder::class,
             TermsOfUseSeeder::class,
             SubscribeDetailSeeder::class,
+            PriceEquationSeeder::class,
         ]);
 
         User::updateOrCreate(

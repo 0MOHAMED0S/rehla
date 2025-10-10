@@ -19,6 +19,7 @@ return new class extends Migration
             $table->text('bio');
             $table->string('image');
             $table->boolean('status')->default(0);
+            $table->decimal('price', 10, 2);
             $table->timestamps();
         });
     }

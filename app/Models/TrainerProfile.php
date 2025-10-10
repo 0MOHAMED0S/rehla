@@ -15,6 +15,7 @@ class TrainerProfile extends Model
         'slug',
         'bio',
         'image',
+        'price',
     ];
 
     public function user()
