@@ -143,3 +143,4 @@ Route::get('/trainers/{id}', [TrainerController::class, 'show']);
 
 
 Route::get('/packages', [UserPackageController::class, 'index']);
+Route::get('/package/trainers/{packageId}', [UserPackageController::class, 'getTrainersByPackage']);
