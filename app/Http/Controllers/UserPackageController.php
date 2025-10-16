@@ -25,9 +25,9 @@ class UserPackageController extends Controller
         ]);
     }
 
-public function getTrainersByPackage($packageId)
+public function getTrainersWithPackagePrice($packageId)
 {
-    // Get the package first
+    // Get the package
     $package = Package::find($packageId);
 
     if (! $package) {
@@ -37,7 +37,7 @@ public function getTrainersByPackage($packageId)
         ]);
     }
 
-    // Get the price equation (assuming you have only one or get the latest)
+    // Get the price equation
     $priceEquation = PriceEquation::latest()->first();
 
     if (! $priceEquation) {
@@ -47,21 +47,23 @@ public function getTrainersByPackage($packageId)
         ]);
     }
 
-    // Fetch trainers that have at least one approved schedule
+    // Get trainers who have at least one approved schedule
     $trainers = User::whereHas('trainerSchedules', function ($query) {
             $query->where('status', 'approved');
         })
         ->with('trainerProfile')
         ->get();
 
-    // Calculate price for each trainer
+    // Calculate new price for each trainer
     $trainersData = $trainers->map(function ($trainer) use ($package, $priceEquation) {
         $base = $priceEquation->base_price;
         $mult = $priceEquation->multiplier;
         $sessions = (int) $package->sessions;
+        $packagePrice = optional($trainer->trainerProfile)->price ?? 0;
 
-        // Formula: (100 * 5 + 150) * عدد الجلسات
-        $calculatedPrice = ($base * $mult + 150) * $sessions;
+        // ✅ New formula:
+        // (package_price * multiplier + base_price) * number_of_sessions
+        $calculatedPrice = ($packagePrice * $mult + $base) * $sessions;
 
         return [
             'id' => $trainer->id,
@@ -69,6 +71,7 @@ public function getTrainersByPackage($packageId)
             'specialization' => optional($trainer->trainerProfile)->specialization,
             'bio' => optional($trainer->trainerProfile)->bio,
             'image' => optional($trainer->trainerProfile)->image,
+            'trainer_base_price' => $packagePrice,
             'base_price' => $base,
             'multiplier' => $mult,
             'sessions' => $sessions,
@@ -86,5 +89,6 @@ public function getTrainersByPackage($packageId)
         'data' => $trainersData,
     ]);
 }
+
 
 }
