@@ -12,7 +12,7 @@ public function store(Request $request)
 {
     $request->validate([
         'day_of_week' => 'required|string|in:saturday,sunday,monday,tuesday,wednesday,thursday,friday',
-        'start_time'  => 'required|integer|min:0|max:23', // only hour-based input (0–23)
+        'start_time'  => 'required|string|min:0|max:23', // only hour-based input (0–23)
     ]);
 
     $trainerId = Auth::id();
