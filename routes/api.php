@@ -133,3 +133,4 @@ Route::get('admin/subscribe-detail', [SubscribeDetailController::class, 'index']
 Route::post('admin/trainers', [TrainerController::class, 'store']);
 Route::get('admin/trainers', [TrainerController::class, 'index']);
 
+Route::get('admin/trainers/all', [TrainerScheduleController::class, 'all']);

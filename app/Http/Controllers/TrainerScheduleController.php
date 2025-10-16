@@ -126,4 +126,24 @@ public function update(Request $request, $id)
             'data' => $schedules,
         ]);
     }
+
+    public function all()
+    {
+        $sessions = TrainerSchedule::with('trainer')
+            ->select('id', 'trainer_id', 'day', 'time', 'status')
+            ->orderBy('day')
+            ->orderBy('time')
+            ->get()
+            ->map(function ($session) {
+                return [
+                    'id' => $session->id,
+                    'trainer' => $session->trainer->name ?? 'غير معروف',
+                    'day' => $session->day,
+                    'time' => date('H:i', strtotime($session->time)),
+                    'status' => $session->status,
+                ];
+            });
+
+        return response()->json($sessions);
+    }
 }
