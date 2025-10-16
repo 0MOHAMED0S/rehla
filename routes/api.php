@@ -136,3 +136,6 @@ Route::get('admin/trainers', [TrainerController::class, 'index']);
 Route::get('admin/trainers/all', [TrainerScheduleController::class, 'all']);
 // routes/api.php
 Route::middleware('auth:sanctum')->get('/trainer/profile', [TrainerScheduleController::class, 'profile']);
+
+Route::get('/trainers', [TrainerController::class, 'index2']);
+Route::get('/trainers/{id}', [TrainerController::class, 'show']);
