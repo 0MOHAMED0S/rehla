@@ -25,7 +25,7 @@ class UserPackageController extends Controller
         ]);
     }
 
-public function getTrainersWithPackagePrice($packageId)
+public function getTrainersByPackage($packageId)
 {
     // Get the package first
     $package = Package::find($packageId);
