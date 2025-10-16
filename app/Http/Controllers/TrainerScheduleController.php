@@ -9,8 +9,6 @@ use Illuminate\Support\Facades\Auth;
 
 class TrainerScheduleController extends Controller
 {
-use Carbon\Carbon;
-use Illuminate\Http\Request;
 
 public function store(Request $request)
 {
