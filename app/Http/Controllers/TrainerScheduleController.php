@@ -145,4 +145,30 @@ class TrainerScheduleController extends Controller
             });
         return response()->json($sessions);
     }
+
+    public function profile()
+    {
+        $user = Auth::user();
+
+        if (!$user || !$user->trainerProfile) {
+            return response()->json([
+                'status' => false,
+                'message' => 'لم يتم العثور على ملف المدرب',
+            ], 404);
+        }
+
+        $profile = $user->trainerProfile;
+
+        return response()->json([
+            'status' => true,
+            'data' => [
+                'name' => $user->name,
+                'specialization' => $profile->specialization ?? '',
+                'slug' => $profile->slug ?? '',
+                'bio' => $profile->bio ?? '',
+                'price' => $profile->price ?? '',
+                'image' => $profile->image ? asset('storage/' . $profile->image) : null,
+            ],
+        ]);
+    }
 }
