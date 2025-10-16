@@ -25,53 +25,66 @@ class UserPackageController extends Controller
         ]);
     }
 
-public function getTrainersByPackage($packageId)
-    {
-        $package = Package::find($packageId);
+public function getTrainersWithPackagePrice($packageId)
+{
+    // Get the package first
+    $package = Package::find($packageId);
 
-        if (!$package) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Package not found'
-            ], 404);
-        }
-
-        // Get price equation (you can later extend this to multiple records)
-        $equation = PriceEquation::first();
-
-        if (!$equation) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Price equation not found'
-            ], 404);
-        }
-
-        $trainers = User::whereHas('trainerSchedules', function ($query) {
-                $query->where('status', 'accepted');
-            })
-            ->with(['trainerSchedules' => function ($query) {
-                $query->where('status', 'accepted');
-            }])
-            ->get();
-
-        $sessions = (int) $package->sessions;
-        $base = $equation->base_price;
-        $multiplier = $equation->multiplier;
-        $extra = 150; // constant in your equation
-
-        $trainers->transform(function ($trainer) use ($base, $multiplier, $extra, $sessions) {
-            $trainer->calculated_price = ($base * $multiplier + $extra) * $sessions;
-            return $trainer;
-        });
-
+    if (! $package) {
         return response()->json([
-            'status' => true,
-            'package' => [
-                'id' => $package->id,
-                'name' => $package->name,
-                'sessions' => $package->sessions,
-            ],
-            'data' => $trainers
+            'status' => false,
+            'message' => 'Package not found',
         ]);
     }
+
+    // Get the price equation (assuming you have only one or get the latest)
+    $priceEquation = PriceEquation::latest()->first();
+
+    if (! $priceEquation) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Price equation not found',
+        ]);
+    }
+
+    // Fetch trainers that have at least one approved schedule
+    $trainers = User::whereHas('trainerSchedules', function ($query) {
+            $query->where('status', 'approved');
+        })
+        ->with('trainerProfile')
+        ->get();
+
+    // Calculate price for each trainer
+    $trainersData = $trainers->map(function ($trainer) use ($package, $priceEquation) {
+        $base = $priceEquation->base_price;
+        $mult = $priceEquation->multiplier;
+        $sessions = (int) $package->sessions;
+
+        // Formula: (100 * 5 + 150) * عدد الجلسات
+        $calculatedPrice = ($base * $mult + 150) * $sessions;
+
+        return [
+            'id' => $trainer->id,
+            'name' => $trainer->name,
+            'specialization' => optional($trainer->trainerProfile)->specialization,
+            'bio' => optional($trainer->trainerProfile)->bio,
+            'image' => optional($trainer->trainerProfile)->image,
+            'base_price' => $base,
+            'multiplier' => $mult,
+            'sessions' => $sessions,
+            'calculated_price' => $calculatedPrice,
+        ];
+    });
+
+    return response()->json([
+        'status' => true,
+        'package' => [
+            'id' => $package->id,
+            'name' => $package->name,
+            'sessions' => $package->sessions,
+        ],
+        'data' => $trainersData,
+    ]);
+}
+
 }
