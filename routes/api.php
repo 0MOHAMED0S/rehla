@@ -24,6 +24,7 @@ use App\Http\Controllers\User\LogoAndLink\LogoAndLinkController as UserLogoAndLi
 use App\Http\Controllers\User\Orders\OrderController as UserOrderController ;
 use App\Http\Controllers\User\Products\ProductController  as UserProductController;
 use App\Http\Controllers\User\Subscribers\SubscribeController;
+use App\Http\Controllers\UserPackageController;
 use App\Models\TrainerSchedule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -139,3 +140,6 @@ Route::middleware('auth:sanctum')->get('/trainer/profile', [TrainerScheduleContr
 
 Route::get('/trainers', [TrainerController::class, 'index2']);
 Route::get('/trainers/{id}', [TrainerController::class, 'show']);
+
+
+Route::get('/packages', [UserPackageController::class, 'index']);
