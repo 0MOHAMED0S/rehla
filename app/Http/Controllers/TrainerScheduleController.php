@@ -10,74 +10,74 @@ use Illuminate\Support\Facades\Auth;
 class TrainerScheduleController extends Controller
 {
 
-public function store(Request $request)
-{
-    $request->validate([
-        'day_of_week' => 'required|string|in:saturday,sunday,monday,tuesday,wednesday,thursday,friday',
-        'start_time'  => 'required|string',
-    ]);
+    public function store(Request $request)
+    {
+        $request->validate([
+            'day_of_week' => 'required|string|in:saturday,sunday,monday,tuesday,wednesday,thursday,friday',
+            'start_time'  => 'required|string',
+        ]);
 
-    $trainerId = Auth::id();
-    $day = strtolower($request->day_of_week);
-    $rawTime = trim($request->start_time);
+        $trainerId = Auth::id();
+        $day = strtolower($request->day_of_week);
+        $rawTime = trim($request->start_time);
 
-    try {
-        $requested = Carbon::parse($rawTime);
-    } catch (\Exception $e) {
-        return response()->json([
-            'status' => false,
-            'message' => 'تنسيق الوقت غير صالح. استخدم وقتًا مثل 03:15 PM أو 15:15.',
-        ], 422);
-    }
-
-    $requestedStr = $requested->format('H:i:s');
-
-    $exists = TrainerSchedule::where('trainer_id', $trainerId)
-        ->where('day_of_week', $day)
-        ->where('status', '!=', 'rejected')
-        ->whereTime('start_time', '=', $requestedStr)
-        ->exists();
-
-    if ($exists) {
-        return response()->json([
-            'status' => false,
-            'message' => '❌ لا يمكنك إضافة نفس اليوم ونفس الوقت مرتين.',
-        ], 422);
-    }
-
-    $schedules = TrainerSchedule::where('trainer_id', $trainerId)
-        ->where('day_of_week', $day)
-        ->where('status', '!=', 'rejected')
-        ->get(['start_time']);
-
-    foreach ($schedules as $sch) {
-        $existing = Carbon::createFromFormat('H:i:s', $sch->start_time);
-        $minutesDiff = abs($existing->diffInMinutes($requested));
-
-        if ($minutesDiff < 60) {
+        try {
+            $requested = Carbon::parse($rawTime);
+        } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => "❌ يوجد تداخل مع ميعاد ({$existing->format('H:i')}) — يجب أن يكون الفارق على الأقل ساعة واحدة.",
+                'message' => 'تنسيق الوقت غير صالح. استخدم وقتًا مثل 03:15 PM أو 15:15.',
             ], 422);
         }
+
+        $requestedStr = $requested->format('H:i:s');
+
+        $exists = TrainerSchedule::where('trainer_id', $trainerId)
+            ->where('day_of_week', $day)
+            ->where('status', '!=', 'rejected')
+            ->whereTime('start_time', '=', $requestedStr)
+            ->exists();
+
+        if ($exists) {
+            return response()->json([
+                'status' => false,
+                'message' => '❌ لا يمكنك إضافة نفس اليوم ونفس الوقت مرتين.',
+            ], 422);
+        }
+
+        $schedules = TrainerSchedule::where('trainer_id', $trainerId)
+            ->where('day_of_week', $day)
+            ->where('status', '!=', 'rejected')
+            ->get(['start_time']);
+
+        foreach ($schedules as $sch) {
+            $existing = Carbon::createFromFormat('H:i:s', $sch->start_time);
+            $minutesDiff = abs($existing->diffInMinutes($requested));
+
+            if ($minutesDiff < 60) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "❌ يوجد تداخل مع ميعاد ({$existing->format('H:i')}) — يجب أن يكون الفارق على الأقل ساعة واحدة.",
+                ], 422);
+            }
+        }
+
+        $schedule = TrainerSchedule::create([
+            'trainer_id'  => $trainerId,
+            'day_of_week' => $day,
+            'start_time'  => $requestedStr,
+            'status'      => 'pending',
+        ]);
+
+        return response()->json([
+            'status' => true,
+            'message' => '✅ تم إضافة الموعد بانتظار الموافقة.',
+            'data' => $schedule,
+        ]);
     }
 
-    $schedule = TrainerSchedule::create([
-        'trainer_id'  => $trainerId,
-        'day_of_week' => $day,
-        'start_time'  => $requestedStr,
-        'status'      => 'pending',
-    ]);
 
-    return response()->json([
-        'status' => true,
-        'message' => '✅ تم إضافة الموعد بانتظار الموافقة.',
-        'data' => $schedule,
-    ]);
-}
-
-
-public function update(Request $request, $id)
+    public function update(Request $request, $id)
     {
         $request->validate([
             'status' => 'required|in:approved,rejected',
@@ -103,7 +103,7 @@ public function update(Request $request, $id)
         ]);
     }
 
- public function pending()
+    public function pending()
     {
         $pendingSchedules = TrainerSchedule::with('trainer')
             ->where('status', 'pending')
@@ -117,7 +117,7 @@ public function update(Request $request, $id)
             'data' => $pendingSchedules,
         ]);
     }
-        public function mySchedules()
+    public function mySchedules()
     {
         $schedules = TrainerSchedule::where('trainer_id', Auth::id())->get();
 
@@ -130,20 +130,19 @@ public function update(Request $request, $id)
     public function all()
     {
         $sessions = TrainerSchedule::with('trainer')
-            ->select('id', 'trainer_id', 'day', 'time', 'status')
-            ->orderBy('day')
-            ->orderBy('time')
+            ->select('id', 'trainer_id', 'day_of_week', 'start_time', 'status')
+            ->orderBy('day_of_week')
+            ->orderBy('start_time')
             ->get()
             ->map(function ($session) {
                 return [
                     'id' => $session->id,
                     'trainer' => $session->trainer->name ?? 'غير معروف',
-                    'day' => $session->day,
-                    'time' => date('H:i', strtotime($session->time)),
+                    'day' => $session->day_of_week,
+                    'time' => date('H:i', strtotime($session->start_time)),
                     'status' => $session->status,
                 ];
             });
-
         return response()->json($sessions);
     }
 }
