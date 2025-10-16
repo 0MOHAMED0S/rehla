@@ -73,5 +73,9 @@ public function trainerProfile()
 {
     return $this->hasOne(Subscriber::class);
 }
+public function trainerSchedules()
+{
+    return $this->hasMany(\App\Models\TrainerSchedule::class, 'trainer_id');
+}
 
 }
