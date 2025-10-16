@@ -47,7 +47,6 @@ public function getTrainersByPackage($packageId)
             ], 404);
         }
 
-        // ✅ Get all trainers with at least one accepted schedule
         $trainers = User::whereHas('trainerProfile')
             ->whereHas('trainerSchedules', function ($q) {
                 $q->where('status', 'accepted');
@@ -59,8 +58,6 @@ public function getTrainersByPackage($packageId)
             ->map(function ($trainer) use ($equation, $package) {
 
                 $trainerBasePrice = (float) $trainer->trainerProfile->price;
-
-                // Apply the formula: (trainer_price * multiplier + base_price) * sessions
                 $calculated = ($trainerBasePrice * $equation->multiplier + $equation->base_price) * $package->sessions;
 
                 return [
