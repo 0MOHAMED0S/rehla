@@ -12,18 +12,18 @@ public function store(Request $request)
 {
     $request->validate([
         'day_of_week' => 'required|string|in:saturday,sunday,monday,tuesday,wednesday,thursday,friday',
-        'start_time'  => 'required|date_format:H:i',
+        'start_time'  => 'required|integer|min:0|max:23', // only hour-based input (0–23)
     ]);
 
     $trainerId = Auth::id();
     $day = strtolower($request->day_of_week);
-    $startTime = $request->start_time;
+    $startHour = (int) $request->start_time;
 
-    $minutes = (int) date('i', strtotime($startTime));
-
-    $exists = \App\Models\TrainerSchedule::where('trainer_id', $trainerId)
+    // Check if trainer already has a schedule at the same hour (ignore rejected)
+    $exists = TrainerSchedule::where('trainer_id', $trainerId)
         ->where('day_of_week', $day)
-        ->where('start_time', $startTime)
+        ->where('status', '!=', 'rejected')
+        ->where('start_time', '=', $startHour . ':00')
         ->exists();
 
     if ($exists) {
@@ -33,34 +33,38 @@ public function store(Request $request)
         ], 422);
     }
 
-    $firstSchedule = \App\Models\TrainerSchedule::where('trainer_id', $trainerId)
-        ->orderBy('id', 'asc')
-        ->first();
+    // Check for conflicts within one hour (ignore rejected)
+    $conflict = TrainerSchedule::where('trainer_id', $trainerId)
+        ->where('day_of_week', $day)
+        ->where('status', '!=', 'rejected')
+        ->whereBetween('start_time', [
+            sprintf('%02d:00', max(0, $startHour - 1)),
+            sprintf('%02d:59', min(23, $startHour + 1)),
+        ])
+        ->exists();
 
-    if ($firstSchedule) {
-        $firstMinutes = (int) date('i', strtotime($firstSchedule->start_time));
-
-        if ($minutes !== $firstMinutes) {
-            return response()->json([
-                'status' => false,
-                'message' => "❌ يجب أن تتطابق الدقائق مع أول موعد سجلته ({$firstMinutes} دقيقة). لا يمكنك اختيار وقت مثل {$startTime}.",
-            ], 422);
-        }
+    if ($conflict) {
+        return response()->json([
+            'status' => false,
+            'message' => '❌ يجب أن يكون الفرق بين المواعيد ساعة واحدة على الأقل في نفس اليوم.',
+        ], 422);
     }
 
+    // Create new schedule (store hour in HH:00 format)
     $schedule = TrainerSchedule::create([
         'trainer_id'  => $trainerId,
         'day_of_week' => $day,
-        'start_time'  => $startTime,
+        'start_time'  => sprintf('%02d:00', $startHour),
         'status'      => 'pending',
     ]);
 
     return response()->json([
         'status' => true,
-        'message' => ' تم إضافة الموعد بانتظار الموافقة.',
+        'message' => '✅ تم إضافة الموعد بانتظار الموافقة.',
         'data' => $schedule,
     ]);
 }
+
 
 public function update(Request $request, $id)
     {
