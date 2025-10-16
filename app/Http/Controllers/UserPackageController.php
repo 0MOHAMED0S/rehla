@@ -27,52 +27,42 @@ class UserPackageController extends Controller
 
 public function getTrainersByPackage($packageId)
     {
-        // Get the selected package
-        $package = Package::where('status', 1)->find($packageId);
+        $package = Package::find($packageId);
 
         if (!$package) {
             return response()->json([
                 'status' => false,
-                'message' => 'لم يتم العثور على الباقة المطلوبة أو أنها غير مفعّلة.',
+                'message' => 'Package not found'
             ], 404);
         }
 
-        // Get the equation
+        // Get price equation (you can later extend this to multiple records)
         $equation = PriceEquation::first();
 
         if (!$equation) {
             return response()->json([
                 'status' => false,
-                'message' => 'معادلة السعر غير موجودة بعد.',
+                'message' => 'Price equation not found'
             ], 404);
         }
 
-        $trainers = User::whereHas('trainerProfile')
-            ->whereHas('trainerSchedules', function ($q) {
-                $q->where('status', 'accepted');
+        $trainers = User::whereHas('trainerSchedules', function ($query) {
+                $query->where('status', 'accepted');
             })
-            ->with(['trainerProfile', 'trainerSchedules' => function ($q) {
-                $q->where('status', 'accepted');
+            ->with(['trainerSchedules' => function ($query) {
+                $query->where('status', 'accepted');
             }])
-            ->get()
-            ->map(function ($trainer) use ($equation, $package) {
+            ->get();
 
-                $trainerBasePrice = (float) $trainer->trainerProfile->price;
-                $calculated = ($trainerBasePrice * $equation->multiplier + $equation->base_price) * $package->sessions;
+        $sessions = (int) $package->sessions;
+        $base = $equation->base_price;
+        $multiplier = $equation->multiplier;
+        $extra = 150; // constant in your equation
 
-                return [
-                    'trainer_id' => $trainer->id,
-                    'trainer_name' => $trainer->name,
-                    'specialization' => $trainer->trainerProfile->specialization ?? '',
-                    'bio' => $trainer->trainerProfile->bio ?? '',
-                    'image' => $trainer->trainerProfile->image
-                        ? asset('storage/' . $trainer->trainerProfile->image)
-                        : null,
-                    'base_price' => $trainerBasePrice,
-                    'total_price' => round($calculated, 2),
-                    'accepted_schedules_count' => $trainer->trainerSchedules->count(),
-                ];
-            });
+        $trainers->transform(function ($trainer) use ($base, $multiplier, $extra, $sessions) {
+            $trainer->calculated_price = ($base * $multiplier + $extra) * $sessions;
+            return $trainer;
+        });
 
         return response()->json([
             'status' => true,
@@ -81,7 +71,7 @@ public function getTrainersByPackage($packageId)
                 'name' => $package->name,
                 'sessions' => $package->sessions,
             ],
-            'data' => $trainers,
+            'data' => $trainers
         ]);
     }
 }
