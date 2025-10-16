@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Package;
 use App\Models\PriceEquation;
+use App\Models\TrainerSchedule;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -90,5 +91,30 @@ public function getTrainersByPackage($packageId)
     ]);
 }
 
+public function getTrainerSchedules($trainerId)
+    {
+        $trainer = User::find($trainerId);
 
+        if (! $trainer) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Trainer not found',
+            ], 404);
+        }
+
+        $schedules = TrainerSchedule::where('trainer_id', $trainerId)
+            ->where('status', 'approved')
+            ->orderBy('day_of_week')
+            ->orderBy('start_time')
+            ->get(['id', 'day_of_week', 'start_time', 'status']);
+
+        return response()->json([
+            'status' => true,
+            'trainer' => [
+                'id' => $trainer->id,
+                'name' => $trainer->name,
+            ],
+            'data' => $schedules,
+        ]);
+    }
 }
