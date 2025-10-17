@@ -120,6 +120,7 @@ class UserPackageController extends Controller
 
     public function searchTrainers(Request $request)
     {
+        dd('ff');die();
         $request->validate([
             'package_id' => 'required|integer|exists:packages,id',
             'day_of_week' => 'nullable|string|in:saturday,sunday,monday,tuesday,wednesday,thursday,friday',
