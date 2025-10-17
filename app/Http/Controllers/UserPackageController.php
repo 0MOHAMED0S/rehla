@@ -118,75 +118,91 @@ class UserPackageController extends Controller
         ]);
     }
 
-    public function searchTrainers(Request $request)
-    {
-        $request->validate([
-            'package_id' => 'required|integer|exists:packages,id',
-            'day_of_week' => 'nullable|string|in:saturday,sunday,monday,tuesday,wednesday,thursday,friday',
-            'start_time' => 'nullable|date_format:H:i',
-        ]);
-
-        $package = Package::find($request->package_id);
-        $priceEquation = PriceEquation::latest()->first();
-
-        if (! $priceEquation) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Price equation not found',
-            ]);
-        }
-
-        // Build the query for trainers dynamically
-        $trainers = User::whereHas('trainerSchedules', function ($query) use ($request) {
-            $query->where('status', 'approved');
-
-            if ($request->filled('day_of_week')) {
-                $query->where('day_of_week', $request->day_of_week);
+ public function searchTrainers(Request $request)
+{
+    $request->validate([
+        'package_id' => 'required|integer|exists:packages,id',
+        'day_of_week' => 'nullable|string|in:saturday,sunday,monday,tuesday,wednesday,thursday,friday',
+        'start_time' => [
+            'nullable',
+            'date_format:H:i',
+            function ($attribute, $value, $fail) {
+                // Check that the time is within a valid 24-hour range
+                $timestamp = strtotime($value);
+                if ($timestamp === false) {
+                    $fail('The time format is invalid.');
+                } else {
+                    $hours = (int) date('H', $timestamp);
+                    $minutes = (int) date('i', $timestamp);
+                    if ($hours < 0 || $hours > 23 || $minutes < 0 || $minutes > 59) {
+                        $fail('The start time must be a valid 24-hour time.');
+                    }
+                }
             }
+        ],
+    ]);
 
-            if ($request->filled('start_time')) {
-                $query->where('start_time', $request->start_time);
-            }
-        })
-            ->with('trainerProfile')
-            ->get();
+    $package = Package::find($request->package_id);
+    $priceEquation = PriceEquation::latest()->first();
 
-        // Calculate trainer price using your equation
-        $trainersData = $trainers->map(function ($trainer) use ($package, $priceEquation) {
-            $base = $priceEquation->base_price;
-            $mult = $priceEquation->multiplier;
-            $sessions = (int) $package->sessions;
-            $packagePrice = optional($trainer->trainerProfile)->price ?? 0;
-
-            // Formula: (package_price * multiplier + base_price) * number_of_sessions
-            $calculatedPrice = ($packagePrice * $mult + $base) * $sessions;
-
-            return [
-                'id' => $trainer->id,
-                'name' => $trainer->name,
-                'specialization' => optional($trainer->trainerProfile)->specialization,
-                'bio' => optional($trainer->trainerProfile)->bio,
-                'image' => optional($trainer->trainerProfile)->image,
-                'trainer_base_price' => $packagePrice,
-                'base_price' => $base,
-                'multiplier' => $mult,
-                'sessions' => $sessions,
-                'calculated_price' => $calculatedPrice,
-            ];
-        });
-
+    if (! $priceEquation) {
         return response()->json([
-            'status' => true,
-            'filters' => [
-                'day_of_week' => $request->day_of_week,
-                'start_time' => $request->start_time,
-            ],
-            'package' => [
-                'id' => $package->id,
-                'name' => $package->name,
-                'sessions' => $package->sessions,
-            ],
-            'data' => $trainersData,
+            'status' => false,
+            'message' => 'Price equation not found',
         ]);
     }
+
+    // Build the query for trainers dynamically
+    $trainers = User::whereHas('trainerSchedules', function ($query) use ($request) {
+        $query->where('status', 'approved');
+
+        if ($request->filled('day_of_week')) {
+            $query->where('day_of_week', $request->day_of_week);
+        }
+
+        if ($request->filled('start_time')) {
+            $query->where('start_time', $request->start_time);
+        }
+    })
+        ->with('trainerProfile')
+        ->get();
+
+    // Calculate trainer price using your equation
+    $trainersData = $trainers->map(function ($trainer) use ($package, $priceEquation) {
+        $base = $priceEquation->base_price;
+        $mult = $priceEquation->multiplier;
+        $sessions = (int) $package->sessions;
+        $packagePrice = optional($trainer->trainerProfile)->price ?? 0;
+
+        $calculatedPrice = ($packagePrice * $mult + $base) * $sessions;
+
+        return [
+            'id' => $trainer->id,
+            'name' => $trainer->name,
+            'specialization' => optional($trainer->trainerProfile)->specialization,
+            'bio' => optional($trainer->trainerProfile)->bio,
+            'image' => optional($trainer->trainerProfile)->image,
+            'trainer_base_price' => $packagePrice,
+            'base_price' => $base,
+            'multiplier' => $mult,
+            'sessions' => $sessions,
+            'calculated_price' => $calculatedPrice,
+        ];
+    });
+
+    return response()->json([
+        'status' => true,
+        'filters' => [
+            'day_of_week' => $request->day_of_week,
+            'start_time' => $request->start_time,
+        ],
+        'package' => [
+            'id' => $package->id,
+            'name' => $package->name,
+            'sessions' => $package->sessions,
+        ],
+        'data' => $trainersData,
+    ]);
+}
+
 }
