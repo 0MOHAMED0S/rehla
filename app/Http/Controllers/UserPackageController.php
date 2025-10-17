@@ -120,27 +120,27 @@ class UserPackageController extends Controller
 
  public function searchTrainers(Request $request)
 {
-    $request->validate([
+    $validator = \Validator::make($request->all(), [
         'package_id' => 'required|integer|exists:packages,id',
         'day_of_week' => 'nullable|string|in:saturday,sunday,monday,tuesday,wednesday,thursday,friday',
         'start_time' => [
             'nullable',
-            'date_format:H:i',
             function ($attribute, $value, $fail) {
-                // Check that the time is within a valid 24-hour range
-                $timestamp = strtotime($value);
-                if ($timestamp === false) {
-                    $fail('The time format is invalid.');
-                } else {
-                    $hours = (int) date('H', $timestamp);
-                    $minutes = (int) date('i', $timestamp);
-                    if ($hours < 0 || $hours > 23 || $minutes < 0 || $minutes > 59) {
-                        $fail('The start time must be a valid 24-hour time.');
-                    }
+                // Only allow format HH:MM (24-hour)
+                if (! preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $value)) {
+                    $fail('The start_time must be in the format HH:MM (e.g., 09:30 or 17:45).');
                 }
-            }
+            },
         ],
     ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Validation error',
+            'errors' => $validator->errors(),
+        ], 422);
+    }
 
     $package = Package::find($request->package_id);
     $priceEquation = PriceEquation::latest()->first();
@@ -152,7 +152,6 @@ class UserPackageController extends Controller
         ]);
     }
 
-    // Build the query for trainers dynamically
     $trainers = User::whereHas('trainerSchedules', function ($query) use ($request) {
         $query->where('status', 'approved');
 
@@ -167,7 +166,6 @@ class UserPackageController extends Controller
         ->with('trainerProfile')
         ->get();
 
-    // Calculate trainer price using your equation
     $trainersData = $trainers->map(function ($trainer) use ($package, $priceEquation) {
         $base = $priceEquation->base_price;
         $mult = $priceEquation->multiplier;
