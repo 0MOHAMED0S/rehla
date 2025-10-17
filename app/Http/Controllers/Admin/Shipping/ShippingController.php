@@ -91,6 +91,15 @@ class ShippingController extends Controller
                 ], 404);
             }
 
+            $isUsed = \App\Models\Order::where('shipping_id', $id)->exists();
+
+            if ($isUsed) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => 'لا يمكن حذف هذا المكان لأنه مستخدم في طلبات موجودة.',
+                ], 400);
+            }
+
             $shipping->delete();
 
             return response()->json([
