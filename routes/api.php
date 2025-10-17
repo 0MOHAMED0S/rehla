@@ -147,4 +147,4 @@ Route::get('/package/trainers/{packageId}', [UserPackageController::class, 'getT
 Route::get('/package/trainers/{id}/schedules', [UserPackageController::class, 'getTrainerSchedules']);
 
 
-Route::get('/search', [UserPackageController::class, 'searchTrainers']);
+Route::get('package/search/trainers', [UserPackageController::class, 'searchTrainers']);
