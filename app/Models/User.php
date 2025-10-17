@@ -62,20 +62,19 @@ class User extends Authenticatable
         return $this->hasOne(Child::class, 'user_id');
     }
     public function orders()
-{
-    return $this->hasMany(Order::class, 'user_id');
-}
-public function trainerProfile()
+    {
+        return $this->hasMany(Order::class, 'user_id');
+    }
+    public function trainerProfile()
     {
         return $this->hasOne(TrainerProfile::class);
     }
     public function subscriber()
-{
-    return $this->hasOne(Subscriber::class);
-}
-public function trainerSchedules()
-{
-    return $this->hasMany(\App\Models\TrainerSchedule::class, 'trainer_id');
-}
-
+    {
+        return $this->hasOne(Subscriber::class);
+    }
+    public function trainerSchedules()
+    {
+        return $this->hasMany(\App\Models\TrainerSchedule::class, 'trainer_id');
+    }
 }

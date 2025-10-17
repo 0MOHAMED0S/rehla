@@ -22,7 +22,7 @@ class StoreShippingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'  => 'required|string|min:3|max:255|unique:products,name',
+            'name'  => 'required|string|min:3|max:255|unique:shippings,name',
             'price' => 'required|numeric|min:0',
         ];
     }
