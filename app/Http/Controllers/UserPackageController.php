@@ -126,18 +126,23 @@ class UserPackageController extends Controller
         'start_time' => [
             'nullable',
             function ($attribute, $value, $fail) {
-                // Only allow format HH:MM (24-hour)
+                // التحقق من أن الوقت بصيغة HH:MM
                 if (! preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $value)) {
-                    $fail('The start_time must be in the format HH:MM (e.g., 09:30 or 17:45).');
+                    $fail('يجب أن يكون وقت البداية بصيغة HH:MM مثل 09:30 أو 17:45.');
                 }
             },
         ],
+    ], [
+        'package_id.required' => 'حقل رقم الباقة مطلوب.',
+        'package_id.integer' => 'يجب أن يكون رقم الباقة عددًا صحيحًا.',
+        'package_id.exists' => 'الباقة غير موجودة.',
+        'day_of_week.in' => 'يوم الأسبوع غير صالح، يجب أن يكون أحد الأيام (saturday إلى friday).',
     ]);
 
     if ($validator->fails()) {
         return response()->json([
             'status' => false,
-            'message' => 'Validation error',
+            'message' => 'حدث خطأ في التحقق من البيانات.',
             'errors' => $validator->errors(),
         ], 422);
     }
@@ -148,7 +153,7 @@ class UserPackageController extends Controller
     if (! $priceEquation) {
         return response()->json([
             'status' => false,
-            'message' => 'Price equation not found',
+            'message' => 'لم يتم العثور على معادلة التسعير.',
         ]);
     }
 
