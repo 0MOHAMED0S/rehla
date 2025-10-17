@@ -7,6 +7,7 @@ use App\Models\PriceEquation;
 use App\Models\TrainerSchedule;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class UserPackageController extends Controller
 {
@@ -120,13 +121,12 @@ class UserPackageController extends Controller
 
  public function searchTrainers(Request $request)
 {
-    $validator = \Validator::make($request->all(), [
+    $validator = Validator::make($request->all(), [
         'package_id' => 'required|integer|exists:packages,id',
         'day_of_week' => 'nullable|string|in:saturday,sunday,monday,tuesday,wednesday,thursday,friday',
         'start_time' => [
             'nullable',
             function ($attribute, $value, $fail) {
-                // التحقق من أن الوقت بصيغة HH:MM
                 if (! preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $value)) {
                     $fail('يجب أن يكون وقت البداية بصيغة HH:MM مثل 09:30 أو 17:45.');
                 }
@@ -136,7 +136,7 @@ class UserPackageController extends Controller
         'package_id.required' => 'حقل رقم الباقة مطلوب.',
         'package_id.integer' => 'يجب أن يكون رقم الباقة عددًا صحيحًا.',
         'package_id.exists' => 'الباقة غير موجودة.',
-        'day_of_week.in' => 'يوم الأسبوع غير صالح، يجب أن يكون أحد الأيام (saturday إلى friday).',
+        'day_of_week.in' => 'يوم الأسبوع غير صالح، يجب أن يكون أحد الأيام من السبت إلى الجمعة.',
     ]);
 
     if ($validator->fails()) {
@@ -157,6 +157,7 @@ class UserPackageController extends Controller
         ]);
     }
 
+    // 🔍 البحث عن المدربين
     $trainers = User::whereHas('trainerSchedules', function ($query) use ($request) {
         $query->where('status', 'approved');
 
@@ -168,9 +169,20 @@ class UserPackageController extends Controller
             $query->where('start_time', $request->start_time);
         }
     })
-        ->with('trainerProfile')
+        ->with(['trainerProfile', 'trainerSchedules' => function ($query) use ($request) {
+            $query->where('status', 'approved');
+
+            if ($request->filled('day_of_week')) {
+                $query->where('day_of_week', $request->day_of_week);
+            }
+
+            if ($request->filled('start_time')) {
+                $query->where('start_time', $request->start_time);
+            }
+        }])
         ->get();
 
+    // 💰 حساب السعر
     $trainersData = $trainers->map(function ($trainer) use ($package, $priceEquation) {
         $base = $priceEquation->base_price;
         $mult = $priceEquation->multiplier;
@@ -190,6 +202,13 @@ class UserPackageController extends Controller
             'multiplier' => $mult,
             'sessions' => $sessions,
             'calculated_price' => $calculatedPrice,
+            'trainer_schedules' => $trainer->trainerSchedules->map(function ($schedule) {
+                return [
+                    'day_of_week' => $schedule->day_of_week,
+                    'start_time' => $schedule->start_time,
+                    'status' => $schedule->status,
+                ];
+            }),
         ];
     });
 
