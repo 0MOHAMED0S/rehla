@@ -79,4 +79,30 @@ class ShippingController extends Controller
             ], 500);
         }
     }
+    public function destroy($id): JsonResponse
+    {
+        try {
+            $shipping = Shipping::find($id);
+
+            if (! $shipping) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => 'لم يتم العثور على المكان المطلوب.',
+                ], 404);
+            }
+
+            $shipping->delete();
+
+            return response()->json([
+                'status'  => true,
+                'message' => 'تم حذف المكان بنجاح.',
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'حدث خطأ أثناء حذف المكان.',
+                'error'   => $e->getMessage(),
+            ], 500);
+        }
+    }
 }

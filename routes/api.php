@@ -84,6 +84,8 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 Route::middleware(['auth:sanctum', 'enhalak'])->group(function () {
     Route::put('/admin/shipping/{id}', [ShippingController::class, 'update']);
     Route::post('/admin/shipping', [ShippingController::class, 'store']);
+    Route::delete('/admin/shipping/{id}', [ShippingController::class, 'destroy']);
+
     Route::apiResource('/admin/products', ProducController::class);
     Route::put('admin/subscribe-detail', [SubscribeDetailController::class, 'update']);
     Route::get('admin/orders/{id}', [OrdersController::class, 'showOrderDetails']);
