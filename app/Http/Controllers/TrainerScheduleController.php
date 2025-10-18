@@ -171,4 +171,15 @@ class TrainerScheduleController extends Controller
             ],
         ]);
     }
+
+    public function approved()
+{
+    $schedules = TrainerSchedule::where('status', 'approved')->get();
+
+    return response()->json([
+        'status' => true,
+        'data' => $schedules,
+    ]);
+}
+
 }

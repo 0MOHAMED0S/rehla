@@ -168,3 +168,5 @@ Route::get('/package/trainers/{id}/schedules', [UserPackageController::class, 'g
 //packages
 Route::get('package/search/trainers', [UserPackageController::class, 'searchTrainers']);
 Route::get('/packages', [UserPackageController::class, 'index']);
+
+Route::get('user/trainer-schedules/approved', [TrainerScheduleController::class, 'approved']);

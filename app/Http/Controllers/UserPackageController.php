@@ -13,53 +13,47 @@ use Illuminate\Support\Facades\Validator;
 
 class UserPackageController extends Controller
 {
-public function index()
-{
-    // ✅ Get price equation
-    $priceEquation = PriceEquation::latest()->first();
+    public function index()
+    {
+        $priceEquation = PriceEquation::latest()->first();
+        if (! $priceEquation) {
+            return response()->json([
+                'status' => false,
+                'message' => 'لم يتم العثور على معادلة السعر.',
+            ]);
+        }
 
-    if (! $priceEquation) {
+        $base = $priceEquation->base_price;
+        $mult = $priceEquation->multiplier;
+
+        $minTrainerPrice = \App\Models\TrainerProfile::min('price');
+        $maxTrainerPrice = \App\Models\TrainerProfile::max('price');
+
+        $packages = Package::where('status', 1)->get([
+            'id',
+            'name',
+            'sessions',
+            'features',
+            'is_most_popular',
+        ]);
+
+        $packages->transform(function ($package) use ($base, $mult, $minTrainerPrice, $maxTrainerPrice) {
+            $sessions = (int) $package->sessions;
+
+            $minPrice = ($minTrainerPrice * $mult + $base) * $sessions;
+            $maxPrice = ($maxTrainerPrice * $mult + $base) * $sessions;
+
+            $package->min_price = round($minPrice, 2);
+            $package->max_price = round($maxPrice, 2);
+
+            return $package;
+        });
+
         return response()->json([
-            'status' => false,
-            'message' => 'لم يتم العثور على معادلة السعر.',
+            'status' => true,
+            'data' => $packages,
         ]);
     }
-
-    $base = $priceEquation->base_price;
-    $mult = $priceEquation->multiplier;
-
-    // ✅ Get min & max trainer prices
-    $minTrainerPrice = \App\Models\TrainerProfile::min('price');
-    $maxTrainerPrice = \App\Models\TrainerProfile::max('price');
-
-    // ✅ Get all active packages
-    $packages = Package::where('status', 1)->get([
-        'id',
-        'name',
-        'sessions',
-        'features',
-        'is_most_popular',
-    ]);
-
-    // ✅ Add calculated min/max price for each package
-    $packages->transform(function ($package) use ($base, $mult, $minTrainerPrice, $maxTrainerPrice) {
-        $sessions = (int) $package->sessions;
-
-        $minPrice = ($minTrainerPrice * $mult + $base) * $sessions;
-        $maxPrice = ($maxTrainerPrice * $mult + $base) * $sessions;
-
-        $package->min_price = round($minPrice, 2);
-        $package->max_price = round($maxPrice, 2);
-
-        return $package;
-    });
-
-    return response()->json([
-        'status' => true,
-        'data' => $packages,
-    ]);
-}
-
     public function getTrainersByPackage($packageId)
     {
         // Get the package
@@ -256,95 +250,92 @@ public function index()
             'data' => $trainersData,
         ]);
     }
+    public function store(Request $request)
+    {
+        $parentId = auth()->id();
 
-public function store(Request $request)
-{
-    $parentId = auth()->id();
-
-    $request->validate([
-        'package_id' => 'required|exists:packages,id',
-        'trainer_id' => 'required|exists:users,id',
-        'trainer_schedule_id' => 'required|exists:trainer_schedules,id',
-        'child_id' => 'required|exists:children,id',
-    ], [
-        'package_id.required' => 'يجب اختيار الباقة.',
-        'trainer_id.required' => 'يجب اختيار المدرب.',
-        'trainer_schedule_id.required' => 'يجب اختيار موعد المدرب.',
-        'child_id.required' => 'يجب اختيار الطفل.',
-    ]);
-
-    $package = Package::findOrFail($request->package_id);
-    $trainer = User::with('trainerProfile')->findOrFail($request->trainer_id);
-    $priceEquation = PriceEquation::latest()->first();
-
-    if (! $priceEquation) {
-        return response()->json([
-            'status' => false,
-            'message' => 'لم يتم العثور على معادلة السعر.',
+        $request->validate([
+            'package_id' => 'required|exists:packages,id',
+            'trainer_id' => 'required|exists:users,id',
+            'trainer_schedule_id' => 'required|exists:trainer_schedules,id',
+            'child_id' => 'required|exists:children,id',
+        ], [
+            'package_id.required' => 'يجب اختيار الباقة.',
+            'trainer_id.required' => 'يجب اختيار المدرب.',
+            'trainer_schedule_id.required' => 'يجب اختيار موعد المدرب.',
+            'child_id.required' => 'يجب اختيار الطفل.',
         ]);
-    }
 
-    $child = Child::where('id', $request->child_id)
-        ->where('parent_id', $parentId)
-        ->first();
+        $package = Package::findOrFail($request->package_id);
+        $trainer = User::with('trainerProfile')->findOrFail($request->trainer_id);
+        $priceEquation = PriceEquation::latest()->first();
 
-    if (! $child) {
+        if (! $priceEquation) {
+            return response()->json([
+                'status' => false,
+                'message' => 'لم يتم العثور على معادلة السعر.',
+            ]);
+        }
+
+        $child = Child::where('id', $request->child_id)
+            ->where('parent_id', $parentId)
+            ->first();
+
+        if (! $child) {
+            return response()->json([
+                'status' => false,
+                'message' => 'هذا الطفل لا يتبع هذا الوالد.',
+            ], 403);
+        }
+
+        $schedule = TrainerSchedule::where('id', $request->trainer_schedule_id)
+            ->where('trainer_id', $trainer->id)
+            ->where('status', 'approved')
+            ->first();
+
+        if (! $schedule) {
+            return response()->json([
+                'status' => false,
+                'message' => 'هذا الموعد غير متاح أو لم يتم الموافقة عليه بعد.',
+            ], 400);
+        }
+
+        $base = $priceEquation->base_price;
+        $mult = $priceEquation->multiplier;
+        $sessions = (int) $package->sessions;
+        $packagePrice = optional($trainer->trainerProfile)->price ?? 0;
+
+        $calculatedPrice = ($packagePrice * $mult + $base) * $sessions;
+
+        $meetLink = 'https://meet.jit.si/' . uniqid('session_');
+
+        $order = PackageOrder::create([
+            'package_id' => $package->id,
+            'trainer_id' => $trainer->id,
+            'trainer_schedule_id' => $schedule->id,
+            'child_id' => $child->id,
+            'parent_id' => $parentId,
+            'meet_link' => $meetLink,
+            'sessions' => $sessions,
+            'additional_sessions' => 0,
+            'price' => $calculatedPrice,
+            'status' => 'ongoing',
+        ]);
+
+        $schedule->update(['status' => 'rejected']);
+
+        $order->load([
+            'package',
+            'trainer',
+            'trainerSchedule',
+            'child.parent',
+        ]);
+
         return response()->json([
-            'status' => false,
-            'message' => 'هذا الطفل لا يتبع هذا الوالد.',
-        ], 403);
+            'status' => true,
+            'message' => 'تم إنشاء الطلب بنجاح.',
+            'data' => $order,
+        ], 201);
     }
-
-    $schedule = TrainerSchedule::where('id', $request->trainer_schedule_id)
-        ->where('trainer_id', $trainer->id)
-        ->where('status', 'approved')
-        ->first();
-
-    if (! $schedule) {
-        return response()->json([
-            'status' => false,
-            'message' => 'هذا الموعد غير متاح أو لم يتم الموافقة عليه بعد.',
-        ], 400);
-    }
-
-    $base = $priceEquation->base_price;
-    $mult = $priceEquation->multiplier;
-    $sessions = (int) $package->sessions;
-    $packagePrice = optional($trainer->trainerProfile)->price ?? 0;
-
-    $calculatedPrice = ($packagePrice * $mult + $base) * $sessions;
-
-    $meetLink = 'https://meet.jit.si/' . uniqid('session_');
-
-    $order = PackageOrder::create([
-        'package_id' => $package->id,
-        'trainer_id' => $trainer->id,
-        'trainer_schedule_id' => $schedule->id,
-        'child_id' => $child->id,
-        'parent_id' => $parentId,
-        'meet_link' => $meetLink,
-        'sessions' => $sessions,
-        'additional_sessions' => 0,
-        'price' => $calculatedPrice,
-        'status' => 'ongoing',
-    ]);
-
-    $schedule->update(['status' => 'rejected']);
-
-    $order->load([
-        'package',
-        'trainer',
-        'trainerSchedule',
-        'child.parent',
-    ]);
-
-    return response()->json([
-        'status' => true,
-        'message' => 'تم إنشاء الطلب بنجاح.',
-        'data' => $order,
-    ], 201);
-}
-
-
-
+    
 }
