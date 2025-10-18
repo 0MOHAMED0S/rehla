@@ -20,7 +20,9 @@ return new class extends Migration
             $table->foreignId('parent_id')->constrained('users')->cascadeOnDelete();
             $table->string('meet_link');
             $table->integer('sessions');
+            $table->decimal('price', 10, 2)->default(0);
             $table->integer('additional_sessions')->default(0);
+            $table->integer('completed_sessions')->default(0);
             $table->enum('status', ['ongoing', 'completed'])->default('ongoing');
             $table->timestamps();
         });

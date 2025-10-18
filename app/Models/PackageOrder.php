@@ -19,7 +19,8 @@ class PackageOrder extends Model
         'sessions',
         'additional_sessions',
         'status',
-        'price'
+        'price',
+        'completed_sessions'
     ];
 
     public function package()
