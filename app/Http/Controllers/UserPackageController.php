@@ -203,6 +203,7 @@ class UserPackageController extends Controller
                 'calculated_price' => $calculatedPrice,
                 'trainer_schedules' => $trainer->trainerSchedules->map(function ($schedule) {
                     return [
+                        'id' => $schedule->id,
                         'day_of_week' => $schedule->day_of_week,
                         'start_time' => $schedule->start_time,
                         'status' => $schedule->status,
