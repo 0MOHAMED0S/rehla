@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Child;
 use App\Models\Package;
 use App\Models\PackageOrder;
 use App\Models\PriceEquation;
@@ -225,20 +226,21 @@ class UserPackageController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+public function store(Request $request)
 {
+    // 🔐 Get authenticated parent
+    $parentId = auth()->id();
+
     $request->validate([
         'package_id' => 'required|exists:packages,id',
         'trainer_id' => 'required|exists:users,id',
         'trainer_schedule_id' => 'required|exists:trainer_schedules,id',
         'child_id' => 'required|exists:children,id',
-        'parent_id' => 'required|exists:users,id',
     ], [
         'package_id.required' => 'يجب اختيار الباقة.',
         'trainer_id.required' => 'يجب اختيار المدرب.',
         'trainer_schedule_id.required' => 'يجب اختيار موعد المدرب.',
         'child_id.required' => 'يجب اختيار الطفل.',
-        'parent_id.required' => 'يجب تحديد ولي الأمر.',
     ]);
 
     $package = Package::findOrFail($request->package_id);
@@ -253,7 +255,19 @@ class UserPackageController extends Controller
         ]);
     }
 
-    // 🔹 حساب السعر النهائي باستخدام المعادلة
+    // ✅ تحقق أن الطفل يخص هذا الوالد
+    $child = Child::where('id', $request->child_id)
+        ->where('parent_id', $parentId)
+        ->first();
+
+    if (! $child) {
+        return response()->json([
+            'status' => false,
+            'message' => 'هذا الطفل لا يتبع هذا الوالد.',
+        ], 403);
+    }
+
+    // 💰 حساب السعر النهائي باستخدام المعادلة
     $base = $priceEquation->base_price;
     $mult = $priceEquation->multiplier;
     $sessions = (int) $package->sessions;
@@ -267,8 +281,8 @@ class UserPackageController extends Controller
         'package_id' => $package->id,
         'trainer_id' => $trainer->id,
         'trainer_schedule_id' => $schedule->id,
-        'child_id' => $request->child_id,
-        'parent_id' => $request->parent_id,
+        'child_id' => $child->id,
+        'parent_id' => $parentId, // 👈 من المستخدم الحالي
         'meet_link' => $meetLink,
         'sessions' => $sessions,
         'additional_sessions' => 0,
@@ -282,5 +296,6 @@ class UserPackageController extends Controller
         'data' => $order->load(['package', 'trainer', 'trainerSchedule', 'child']),
     ], 201);
 }
+
 
 }
