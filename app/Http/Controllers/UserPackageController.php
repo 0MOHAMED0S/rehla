@@ -228,7 +228,6 @@ class UserPackageController extends Controller
 
 public function store(Request $request)
 {
-    // 🔐 Get authenticated parent
     $parentId = auth()->id();
 
     $request->validate([
@@ -244,7 +243,6 @@ public function store(Request $request)
     ]);
 
     $package = Package::findOrFail($request->package_id);
-    $schedule = TrainerSchedule::findOrFail($request->trainer_schedule_id);
     $trainer = User::with('trainerProfile')->findOrFail($request->trainer_id);
     $priceEquation = PriceEquation::latest()->first();
 
@@ -255,7 +253,6 @@ public function store(Request $request)
         ]);
     }
 
-    // ✅ تحقق أن الطفل يخص هذا الوالد
     $child = Child::where('id', $request->child_id)
         ->where('parent_id', $parentId)
         ->first();
@@ -267,7 +264,18 @@ public function store(Request $request)
         ], 403);
     }
 
-    // 💰 حساب السعر النهائي باستخدام المعادلة
+    $schedule = TrainerSchedule::where('id', $request->trainer_schedule_id)
+        ->where('trainer_id', $trainer->id)
+        ->where('status', 'approved')
+        ->first();
+
+    if (! $schedule) {
+        return response()->json([
+            'status' => false,
+            'message' => 'هذا الموعد غير متاح أو لم يتم الموافقة عليه بعد.',
+        ], 400);
+    }
+
     $base = $priceEquation->base_price;
     $mult = $priceEquation->multiplier;
     $sessions = (int) $package->sessions;
@@ -282,7 +290,7 @@ public function store(Request $request)
         'trainer_id' => $trainer->id,
         'trainer_schedule_id' => $schedule->id,
         'child_id' => $child->id,
-        'parent_id' => $parentId, // 👈 من المستخدم الحالي
+        'parent_id' => $parentId,
         'meet_link' => $meetLink,
         'sessions' => $sessions,
         'additional_sessions' => 0,
@@ -290,12 +298,22 @@ public function store(Request $request)
         'status' => 'ongoing',
     ]);
 
+    $schedule->update(['status' => 'rejected']);
+
+    $order->load([
+        'package',
+        'trainer',
+        'trainerSchedule',
+        'child.parent',
+    ]);
+
     return response()->json([
         'status' => true,
         'message' => 'تم إنشاء الطلب بنجاح.',
-        'data' => $order->load(['package', 'trainer', 'trainerSchedule', 'child']),
+        'data' => $order,
     ], 201);
 }
+
 
 
 }
