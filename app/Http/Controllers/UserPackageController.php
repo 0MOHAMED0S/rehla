@@ -13,21 +13,53 @@ use Illuminate\Support\Facades\Validator;
 
 class UserPackageController extends Controller
 {
-    public function index()
-    {
-        $packages = Package::where('status', 1)->get([
-            'id',
-            'name',
-            'sessions',
-            'features',
-            'is_most_popular',
-        ]);
+public function index()
+{
+    // ✅ Get price equation
+    $priceEquation = PriceEquation::latest()->first();
 
+    if (! $priceEquation) {
         return response()->json([
-            'status' => true,
-            'data' => $packages,
+            'status' => false,
+            'message' => 'لم يتم العثور على معادلة السعر.',
         ]);
     }
+
+    $base = $priceEquation->base_price;
+    $mult = $priceEquation->multiplier;
+
+    // ✅ Get min & max trainer prices
+    $minTrainerPrice = \App\Models\TrainerProfile::min('price');
+    $maxTrainerPrice = \App\Models\TrainerProfile::max('price');
+
+    // ✅ Get all active packages
+    $packages = Package::where('status', 1)->get([
+        'id',
+        'name',
+        'sessions',
+        'features',
+        'is_most_popular',
+    ]);
+
+    // ✅ Add calculated min/max price for each package
+    $packages->transform(function ($package) use ($base, $mult, $minTrainerPrice, $maxTrainerPrice) {
+        $sessions = (int) $package->sessions;
+
+        $minPrice = ($minTrainerPrice * $mult + $base) * $sessions;
+        $maxPrice = ($maxTrainerPrice * $mult + $base) * $sessions;
+
+        $package->min_price = round($minPrice, 2);
+        $package->max_price = round($maxPrice, 2);
+
+        return $package;
+    });
+
+    return response()->json([
+        'status' => true,
+        'data' => $packages,
+    ]);
+}
+
     public function getTrainersByPackage($packageId)
     {
         // Get the package
@@ -156,7 +188,6 @@ class UserPackageController extends Controller
             ]);
         }
 
-        // 🔍 البحث عن المدربين
         $trainers = User::whereHas('trainerSchedules', function ($query) use ($request) {
             $query->where('status', 'approved');
 
@@ -181,7 +212,6 @@ class UserPackageController extends Controller
             }])
             ->get();
 
-        // 💰 حساب السعر
         $trainersData = $trainers->map(function ($trainer) use ($package, $priceEquation) {
             $base = $priceEquation->base_price;
             $mult = $priceEquation->multiplier;

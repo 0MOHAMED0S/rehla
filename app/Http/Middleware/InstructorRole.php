@@ -24,7 +24,6 @@ class InstructorRole
                 'message' => 'تم رفض الوصول. هذه الصفحة تتطلب صلاحية  مدرب .'
             ], 403);
         }
-
         return $next($request);
     }
 }
