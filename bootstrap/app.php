@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'enhalak' => \App\Http\Middleware\EnhaLakRoleMiddleware::class,
             'bedaet' => \App\Http\Middleware\BedetElRehlaRoleMiddleware::class,
             'check.child' => \App\Http\Middleware\CheckChildOwnership::class,
+            'instructor' => \App\Http\Middleware\InstructorRole::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

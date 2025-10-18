@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Package;
+use App\Models\PackageOrder;
 use App\Models\PriceEquation;
 use App\Models\TrainerSchedule;
 use App\Models\User;
@@ -26,7 +27,6 @@ class UserPackageController extends Controller
             'data' => $packages,
         ]);
     }
-
     public function getTrainersByPackage($packageId)
     {
         // Get the package
@@ -91,7 +91,6 @@ class UserPackageController extends Controller
             'data' => $trainersData,
         ]);
     }
-
     public function getTrainerSchedules($trainerId)
     {
         $trainer = User::find($trainerId);
@@ -118,58 +117,46 @@ class UserPackageController extends Controller
             'data' => $schedules,
         ]);
     }
-
- public function searchTrainers(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'package_id' => 'required|integer|exists:packages,id',
-        'day_of_week' => 'nullable|string|in:saturday,sunday,monday,tuesday,wednesday,thursday,friday',
-        'start_time' => [
-            'nullable',
-            function ($attribute, $value, $fail) {
-                if (! preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $value)) {
-                    $fail('يجب أن يكون وقت البداية بصيغة HH:MM مثل 09:30 أو 17:45.');
-                }
-            },
-        ],
-    ], [
-        'package_id.required' => 'حقل رقم الباقة مطلوب.',
-        'package_id.integer' => 'يجب أن يكون رقم الباقة عددًا صحيحًا.',
-        'package_id.exists' => 'الباقة غير موجودة.',
-        'day_of_week.in' => 'يوم الأسبوع غير صالح، يجب أن يكون أحد الأيام من السبت إلى الجمعة.',
-    ]);
-
-    if ($validator->fails()) {
-        return response()->json([
-            'status' => false,
-            'message' => 'حدث خطأ في التحقق من البيانات.',
-            'errors' => $validator->errors(),
-        ], 422);
-    }
-
-    $package = Package::find($request->package_id);
-    $priceEquation = PriceEquation::latest()->first();
-
-    if (! $priceEquation) {
-        return response()->json([
-            'status' => false,
-            'message' => 'لم يتم العثور على معادلة التسعير.',
+    public function searchTrainers(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'package_id' => 'required|integer|exists:packages,id',
+            'day_of_week' => 'nullable|string|in:saturday,sunday,monday,tuesday,wednesday,thursday,friday',
+            'start_time' => [
+                'nullable',
+                function ($attribute, $value, $fail) {
+                    if (! preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $value)) {
+                        $fail('يجب أن يكون وقت البداية بصيغة HH:MM مثل 09:30 أو 17:45.');
+                    }
+                },
+            ],
+        ], [
+            'package_id.required' => 'حقل رقم الباقة مطلوب.',
+            'package_id.integer' => 'يجب أن يكون رقم الباقة عددًا صحيحًا.',
+            'package_id.exists' => 'الباقة غير موجودة.',
+            'day_of_week.in' => 'يوم الأسبوع غير صالح، يجب أن يكون أحد الأيام من السبت إلى الجمعة.',
         ]);
-    }
 
-    // 🔍 البحث عن المدربين
-    $trainers = User::whereHas('trainerSchedules', function ($query) use ($request) {
-        $query->where('status', 'approved');
-
-        if ($request->filled('day_of_week')) {
-            $query->where('day_of_week', $request->day_of_week);
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'حدث خطأ في التحقق من البيانات.',
+                'errors' => $validator->errors(),
+            ], 422);
         }
 
-        if ($request->filled('start_time')) {
-            $query->where('start_time', $request->start_time);
+        $package = Package::find($request->package_id);
+        $priceEquation = PriceEquation::latest()->first();
+
+        if (! $priceEquation) {
+            return response()->json([
+                'status' => false,
+                'message' => 'لم يتم العثور على معادلة التسعير.',
+            ]);
         }
-    })
-        ->with(['trainerProfile', 'trainerSchedules' => function ($query) use ($request) {
+
+        // 🔍 البحث عن المدربين
+        $trainers = User::whereHas('trainerSchedules', function ($query) use ($request) {
             $query->where('status', 'approved');
 
             if ($request->filled('day_of_week')) {
@@ -179,52 +166,121 @@ class UserPackageController extends Controller
             if ($request->filled('start_time')) {
                 $query->where('start_time', $request->start_time);
             }
-        }])
-        ->get();
+        })
+            ->with(['trainerProfile', 'trainerSchedules' => function ($query) use ($request) {
+                $query->where('status', 'approved');
 
-    // 💰 حساب السعر
-    $trainersData = $trainers->map(function ($trainer) use ($package, $priceEquation) {
-        $base = $priceEquation->base_price;
-        $mult = $priceEquation->multiplier;
-        $sessions = (int) $package->sessions;
-        $packagePrice = optional($trainer->trainerProfile)->price ?? 0;
+                if ($request->filled('day_of_week')) {
+                    $query->where('day_of_week', $request->day_of_week);
+                }
 
-        $calculatedPrice = ($packagePrice * $mult + $base) * $sessions;
+                if ($request->filled('start_time')) {
+                    $query->where('start_time', $request->start_time);
+                }
+            }])
+            ->get();
 
-        return [
-            'id' => $trainer->id,
-            'name' => $trainer->name,
-            'specialization' => optional($trainer->trainerProfile)->specialization,
-            'bio' => optional($trainer->trainerProfile)->bio,
-            'image' => optional($trainer->trainerProfile)->image,
-            'trainer_base_price' => $packagePrice,
-            'base_price' => $base,
-            'multiplier' => $mult,
-            'sessions' => $sessions,
-            'calculated_price' => $calculatedPrice,
-            'trainer_schedules' => $trainer->trainerSchedules->map(function ($schedule) {
-                return [
-                    'day_of_week' => $schedule->day_of_week,
-                    'start_time' => $schedule->start_time,
-                    'status' => $schedule->status,
-                ];
-            }),
-        ];
-    });
+        // 💰 حساب السعر
+        $trainersData = $trainers->map(function ($trainer) use ($package, $priceEquation) {
+            $base = $priceEquation->base_price;
+            $mult = $priceEquation->multiplier;
+            $sessions = (int) $package->sessions;
+            $packagePrice = optional($trainer->trainerProfile)->price ?? 0;
+
+            $calculatedPrice = ($packagePrice * $mult + $base) * $sessions;
+
+            return [
+                'id' => $trainer->id,
+                'name' => $trainer->name,
+                'specialization' => optional($trainer->trainerProfile)->specialization,
+                'bio' => optional($trainer->trainerProfile)->bio,
+                'image' => optional($trainer->trainerProfile)->image,
+                'trainer_base_price' => $packagePrice,
+                'base_price' => $base,
+                'multiplier' => $mult,
+                'sessions' => $sessions,
+                'calculated_price' => $calculatedPrice,
+                'trainer_schedules' => $trainer->trainerSchedules->map(function ($schedule) {
+                    return [
+                        'day_of_week' => $schedule->day_of_week,
+                        'start_time' => $schedule->start_time,
+                        'status' => $schedule->status,
+                    ];
+                }),
+            ];
+        });
+
+        return response()->json([
+            'status' => true,
+            'filters' => [
+                'day_of_week' => $request->day_of_week,
+                'start_time' => $request->start_time,
+            ],
+            'package' => [
+                'id' => $package->id,
+                'name' => $package->name,
+                'sessions' => $package->sessions,
+            ],
+            'data' => $trainersData,
+        ]);
+    }
+
+    public function store(Request $request)
+{
+    $request->validate([
+        'package_id' => 'required|exists:packages,id',
+        'trainer_id' => 'required|exists:users,id',
+        'trainer_schedule_id' => 'required|exists:trainer_schedules,id',
+        'child_id' => 'required|exists:children,id',
+        'parent_id' => 'required|exists:users,id',
+    ], [
+        'package_id.required' => 'يجب اختيار الباقة.',
+        'trainer_id.required' => 'يجب اختيار المدرب.',
+        'trainer_schedule_id.required' => 'يجب اختيار موعد المدرب.',
+        'child_id.required' => 'يجب اختيار الطفل.',
+        'parent_id.required' => 'يجب تحديد ولي الأمر.',
+    ]);
+
+    $package = Package::findOrFail($request->package_id);
+    $schedule = TrainerSchedule::findOrFail($request->trainer_schedule_id);
+    $trainer = User::with('trainerProfile')->findOrFail($request->trainer_id);
+    $priceEquation = PriceEquation::latest()->first();
+
+    if (! $priceEquation) {
+        return response()->json([
+            'status' => false,
+            'message' => 'لم يتم العثور على معادلة السعر.',
+        ]);
+    }
+
+    // 🔹 حساب السعر النهائي باستخدام المعادلة
+    $base = $priceEquation->base_price;
+    $mult = $priceEquation->multiplier;
+    $sessions = (int) $package->sessions;
+    $packagePrice = optional($trainer->trainerProfile)->price ?? 0;
+
+    $calculatedPrice = ($packagePrice * $mult + $base) * $sessions;
+
+    $meetLink = 'https://meet.jit.si/' . uniqid('session_');
+
+    $order = PackageOrder::create([
+        'package_id' => $package->id,
+        'trainer_id' => $trainer->id,
+        'trainer_schedule_id' => $schedule->id,
+        'child_id' => $request->child_id,
+        'parent_id' => $request->parent_id,
+        'meet_link' => $meetLink,
+        'sessions' => $sessions,
+        'additional_sessions' => 0,
+        'price' => $calculatedPrice,
+        'status' => 'ongoing',
+    ]);
 
     return response()->json([
         'status' => true,
-        'filters' => [
-            'day_of_week' => $request->day_of_week,
-            'start_time' => $request->start_time,
-        ],
-        'package' => [
-            'id' => $package->id,
-            'name' => $package->name,
-            'sessions' => $package->sessions,
-        ],
-        'data' => $trainersData,
-    ]);
+        'message' => 'تم إنشاء الطلب بنجاح.',
+        'data' => $order->load(['package', 'trainer', 'trainerSchedule', 'child']),
+    ], 201);
 }
 
 }

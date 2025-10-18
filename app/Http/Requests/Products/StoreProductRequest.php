@@ -10,7 +10,6 @@ class StoreProductRequest extends FormRequest
     {
         return true;
     }
-
     public function rules(): array
     {
         return [
@@ -26,7 +25,6 @@ class StoreProductRequest extends FormRequest
             'image'                 => ['required', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:2048'],
         ];
     }
-
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
@@ -42,8 +40,7 @@ class StoreProductRequest extends FormRequest
                         'إذا اخترت السعر الثابت لا يمكن إدخال أسعار أخرى.'
                     );
                 }
-            }
-            else {
+            } else {
                 if (is_null($electronic) && is_null($printed) && is_null($offer)) {
                     $validator->errors()->add(
                         'price',
@@ -53,7 +50,6 @@ class StoreProductRequest extends FormRequest
             }
         });
     }
-
     public function messages(): array
     {
         return [
