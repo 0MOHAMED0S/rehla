@@ -322,7 +322,7 @@ class UserPackageController extends Controller
             'status' => 'ongoing',
         ]);
 
-        $schedule->update(['status' => 'rejected']);
+        $schedule->update(['status' => 'booked']);
 
         $order->load([
             'package',
@@ -337,5 +337,5 @@ class UserPackageController extends Controller
             'data' => $order,
         ], 201);
     }
-    
+
 }

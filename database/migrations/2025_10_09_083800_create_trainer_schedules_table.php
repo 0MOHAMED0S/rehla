@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('trainer_id')->constrained('users')->onDelete('cascade');
             $table->string('day_of_week'); // Saturday, Sunday, etc.
             $table->time('start_time');
-            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
+            $table->enum('status', ['pending', 'approved', 'rejected','booked'])->default('pending');
             $table->timestamps();
         });
     }
