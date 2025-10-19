@@ -83,7 +83,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::put('admin/price-equation', [PriceEquationController::class, 'update']);
 
     Route::get('admin/package-orders', [PackageOrderController::class, 'index']);
-
+    Route::get('admin/package-orders/{id}', [PackageOrderController::class, 'show']);
 });
 
 

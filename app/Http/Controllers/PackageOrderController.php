@@ -26,5 +26,29 @@ class PackageOrderController extends Controller
         'data' => $orders,
     ]);
 }
+public function show($id)
+{
+    $order = PackageOrder::with([
+        'package',
+        'trainer.trainerProfile',   // Trainer details + profile
+        'trainerSchedule',
+        'child.user',               // Child info + user
+        'child.parent',             // Child’s parent
+        'parent',                   // Parent info
+    ])->find($id);
+
+    if (! $order) {
+        return response()->json([
+            'status' => false,
+            'message' => 'الطلب غير موجود.',
+        ], 404);
+    }
+
+    return response()->json([
+        'status' => true,
+        'message' => 'تم جلب تفاصيل الطلب بنجاح.',
+        'data' => $order,
+    ]);
+}
 
 }
