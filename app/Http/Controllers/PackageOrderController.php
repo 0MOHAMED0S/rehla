@@ -17,7 +17,7 @@ class PackageOrderController extends Controller
         'parent',
     ])
     ->whereHas('trainerSchedule', function ($q) {
-        $q->where('status', 'approved');
+        $q->where('status', 'rejected');
     })
     ->get();
 
