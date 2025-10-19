@@ -11,13 +11,13 @@ class PackageOrderController extends Controller
 {
     $orders =PackageOrder::with([
         'package',
-        'trainer.trainerProfile',   // ✅ correct trainer relation
+        'trainer.trainerProfile',
         'trainerSchedule',
-        'child.user',               // ✅ child’s User info
-        'parent',                   // ✅ parent info
+        'child.user',
+        'parent',
     ])
     ->whereHas('trainerSchedule', function ($q) {
-        $q->where('status', 'approved');   // ✅ only approved schedules
+        $q->where('status', 'approved');
     })
     ->get();
 
