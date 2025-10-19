@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\Shipping\ShippingController;
 use App\Http\Controllers\Admin\Subscribers\SubscribeController as SubscribersSubscribeController;
 use App\Http\Controllers\Admin\TermsOfUse\TermsOfUseController;
 use App\Http\Controllers\Admin\Trainers\TrainerController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PackageOrderController;
 use App\Http\Controllers\PriceEquationController;
 use App\Http\Controllers\TrainerScheduleController;
@@ -84,6 +85,9 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 
     Route::get('admin/package-orders', [PackageOrderController::class, 'index']);
     Route::get('admin/package-orders/{id}', [PackageOrderController::class, 'show']);
+
+    Route::get('admin/dashboard', [DashboardController::class, 'index']);
+
 });
 
 
@@ -173,3 +177,4 @@ Route::get('/package/trainers/{id}/schedules', [UserPackageController::class, 'g
 Route::get('package/search/trainers', [UserPackageController::class, 'searchTrainers']);
 Route::get('/packages', [UserPackageController::class, 'index']);
 Route::get('user/trainer-schedules/approved', [TrainerScheduleController::class, 'approved']);
+
