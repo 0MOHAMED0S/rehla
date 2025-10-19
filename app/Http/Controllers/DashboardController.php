@@ -52,8 +52,8 @@ class DashboardController extends Controller
         $newSupportMessages = ContactMessage::where('is_read', false)->count();
 
         // Total completed revenues (from orders + packages)
-        $completedRevenue = (float) Order::where('status', 'completed')->sum('price')
-            + (float) PackageOrder::where('status', 'completed')->sum('price');
+        $completedRevenue = (float) Order::where('status', 'paid')->sum('price')
+            + (float) PackageOrder::where('status', 'ongoing')->sum('price');
 
         return response()->json([
             'status' => true,
