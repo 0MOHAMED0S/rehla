@@ -88,7 +88,7 @@ class RolesController extends Controller
         $newRoleId = $validated['role_id'];
 
         // ✅ Get the names of roles for logic comparison
-        $newRoleName  = \App\Models\Role::find($newRoleId)?->name;
+        $newRoleName  = Role::find($newRoleId)?->name;
         $currentRole  = $user->role?->name;
         $authRoleName = $authUser->role?->name;
 
@@ -104,12 +104,13 @@ class RolesController extends Controller
         }
 
         // ✅ 2. Prevent changing to instructor if user has no trainer profile
-        if ($newRoleName === 'trainer' && ! $user->trainerProfile) {
-            return response()->json([
-                'status'  => false,
-                'message' => 'لا يمكن تحويل المستخدم إلى مدرب لأنه لا يملك ملف مدرب.',
-            ], 422);
-        }
+if ($newRoleName === 'instructor' && ! $user->trainerProfile) {
+    return response()->json([
+        'status'  => false,
+        'message' => 'لا يمكن تحويل المستخدم إلى مدرب لأنه لا يملك ملف مدرب.',
+    ], 422);
+}
+
 
         // ✅ 3. Prevent assigning "child" role to a user who already has children or linked trainer
         if ($newRoleName === 'child' && $user->childProfile) {
