@@ -11,12 +11,12 @@ class PackageOrderController extends Controller
     {
         $orders = PackageOrder::with([
             'package',
-            'trainer',
+            'trainer.profile',
             'trainerSchedule',
-            'child',
+            'child.profile',
             'parent'
-        ])->get();
-
+        ])
+        ->get();
         return response()->json($orders);
     }
 }
