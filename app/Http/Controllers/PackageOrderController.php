@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\PackageOrder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class PackageOrderController extends Controller
 {
@@ -142,6 +143,36 @@ public function showChildOrder($id)
             'child_profile' => $childProfile,
             'order'         => $order,
         ],
+    ]);
+}
+
+public function trainerOrders()
+{
+    $trainer = Auth::user();
+
+    if (!$trainer || !$trainer->trainerProfile) {
+        return response()->json([
+            'status' => false,
+            'message' => 'You are not authorized or not a trainer.',
+        ], 403);
+    }
+
+    $orders = PackageOrder::with([
+        'package',
+        'trainer.trainerProfile',
+        'trainerSchedule',
+        'child.user',        // child’s account info
+        'child.parent',      // parent of the child
+        'parent',            // direct parent relation
+    ])
+    ->where('trainer_id', $trainer->id)
+    ->orderBy('created_at', 'desc')
+    ->get();
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Trainer package orders retrieved successfully.',
+        'data' => $orders,
     ]);
 }
 
