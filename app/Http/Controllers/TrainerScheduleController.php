@@ -184,34 +184,5 @@ class TrainerScheduleController extends Controller
     }
 
 
-    public function myOrders(Request $request)
-    {
-        $user = $request->user();
 
-        // If the user is not a parent, deny access
-        if (! $user->hasRole('parent')) {
-            return response()->json([
-                'status'  => false,
-                'message' => 'هذا المستخدم ليس ولي أمر.',
-            ], 403);
-        }
-
-        $orders = PackageOrder::with([
-            'package',
-            'trainer.trainerProfile',
-            'trainerSchedule',
-            'child.user',
-            'child.childProfile',
-            'child.parent',
-            'parent',
-        ])
-            ->where('parent_id', $user->id)
-            ->get();
-
-        return response()->json([
-            'status'  => true,
-            'message' => 'تم جلب الطلبات الخاصة بك بنجاح.',
-            'data'    => $orders,
-        ]);
-    }
 }

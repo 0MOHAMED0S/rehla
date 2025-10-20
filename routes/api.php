@@ -89,6 +89,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('admin/dashboard', [DashboardController::class, 'index']);
 
 });
+
 Route::middleware('auth:sanctum')->get('user/package-orders', [PackageOrderController::class, 'myOrders']);
 
 
