@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 class ChildController extends Controller
 {
@@ -85,29 +86,43 @@ class ChildController extends Controller
         try {
             $parentId = Auth::id();
 
-            // Get all children with their user data
-            $children = Child::where('parent_id', $parentId)->get();
+            // جلب الأطفال مع بيانات المستخدم المرتبطة لتجنّب N+1
+            $children = Child::with('user')
+                ->where('parent_id', $parentId)
+                ->get();
 
-            // Merge each child's data with its user data
+            // تحويل كل سجل لإخراج منظم (child + nested user)
             $childrenData = $children->map(function ($child) {
-                return array_merge(
-                    $child->toArray(),
-                    $child->user ? $child->user->toArray() : []
-                );
+                return [
+                    'id' => $child->id,
+                    'user_id' => $child->user_id,
+                    'parent_id' => $child->parent_id,
+                    'age' => $child->age,
+                    'gender' => $child->gender,
+                    'interests' => $child->interests,
+                    'strengths' => $child->strengths,
+                    'avatar' => $child->avatar ? asset('storage/' . $child->avatar) : null, // اختياري: رابط كامل
+                    // nested user info (if exists)
+                    'user' => $child->user ? [
+                        'id' => $child->user->id,
+                        'name' => $child->user->name,
+                        'email' => $child->user->email,
+                        // أضف حقولا أخرى حسب حاجتك، تجنّب الحقول الحساسة
+                    ] : null,
+                ];
             });
 
             return response()->json([
-                'status'       => true,
-                'message'      => $children->isNotEmpty()
-                    ? 'لدى المستخدم أطفال مسجلين'
-                    : 'لا يوجد أطفال للمستخدم',
+                'status' => true,
+                'message' => $children->isNotEmpty() ? 'لدى المستخدم أطفال مسجلين' : 'لا يوجد أطفال للمستخدم',
                 'has_children' => $children->isNotEmpty(),
-                'children'     => $childrenData,
+                'children' => $childrenData,
             ], 200);
         } catch (\Exception $e) {
+            Log::error('checkChildren error: ' . $e->getMessage());
             return response()->json([
                 'status'  => false,
-                'message' => 'حدث خطأ أثناء جلب الأطفال',
+                'message' => 'حدث خطأ أثناء جلب الأطفال.',
                 'error'   => $e->getMessage(),
             ], 500);
         }
