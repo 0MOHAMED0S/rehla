@@ -105,5 +105,44 @@ public function myPackageOrdersForChild()
         ],
     ]);
 }
+public function showChildOrder($id)
+{
+    $user = auth()->user();
+    $childProfile = $user->childProfile;
+
+    if (! $childProfile) {
+        return response()->json([
+            'status'  => false,
+            'message' => 'لم يتم العثور على ملف الطفل.',
+        ], 404);
+    }
+
+    $order = PackageOrder::with([
+        'package',
+        'trainer.trainerProfile',
+        'trainerSchedule',
+        'child.user',
+        'child.parent',
+        'parent',
+    ])
+    ->where('child_id', $childProfile->id)
+    ->find($id);
+
+    if (! $order) {
+        return response()->json([
+            'status'  => false,
+            'message' => 'الطلب غير موجود أو لا يخص هذا الطفل.',
+        ], 404);
+    }
+
+    return response()->json([
+        'status'  => true,
+        'message' => 'تم جلب تفاصيل الطلب بنجاح.',
+        'data'    => [
+            'child_profile' => $childProfile,
+            'order'         => $order,
+        ],
+    ]);
+}
 
 }

@@ -92,6 +92,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 
 Route::middleware('auth:sanctum')->get('/user/package-orders', [PackageOrderController::class, 'myOrders']);
 Route::middleware('auth:sanctum')->get('/child/package-orders', [PackageOrderController::class, 'myPackageOrdersForChild']);
+Route::middleware('auth:sanctum')->get('/child/package-orders/{id}', [PackageOrderController::class, 'showChildOrder']);
 
 
 
@@ -120,7 +121,6 @@ Route::middleware(['auth:sanctum', 'instructor'])->group(function () {
     Route::post('trainer/schedule', [TrainerScheduleController::class, 'store']);
     Route::get('trainer/schedule/my', [TrainerScheduleController::class, 'mySchedules']);
     Route::get('/trainer/profile', [TrainerScheduleController::class, 'profile']);
-
 });
 
 
