@@ -90,7 +90,8 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 
 });
 
-Route::middleware('auth:sanctum')->get('user/package-orders', [PackageOrderController::class, 'myOrders']);
+Route::middleware('auth:sanctum')->get('/user/package-orders', [PackageOrderController::class, 'myOrders']);
+Route::middleware('auth:sanctum')->get('/child/package-orders', [PackageOrderController::class, 'myPackageOrdersForChild']);
 
 
 

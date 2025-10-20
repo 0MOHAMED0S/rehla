@@ -72,5 +72,38 @@ public function myOrders(Request $request)
         'data'    => $orders,
     ]);
 }
+public function myPackageOrdersForChild()
+{
+    $user = auth()->user();
+
+    $childProfile = $user->childProfile;
+
+    if (! $childProfile) {
+        return response()->json([
+            'status'  => false,
+            'message' => 'لم يتم العثور على ملف الطفل.',
+        ], 404);
+    }
+
+    $orders = PackageOrder::with([
+        'package',
+        'trainer.trainerProfile',
+        'trainerSchedule',
+        'child.user',
+        'child.parent',
+        'parent',
+    ])
+    ->where('child_id', $childProfile->id)
+    ->get();
+
+    return response()->json([
+        'status'  => true,
+        'message' => 'تم جلب الطلبات بنجاح.',
+        'data'    => [
+            'child_profile' => $childProfile,
+            'orders'        => $orders,
+        ],
+    ]);
+}
 
 }
