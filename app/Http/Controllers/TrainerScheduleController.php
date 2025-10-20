@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PackageOrder;
 use App\Models\TrainerSchedule;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -173,13 +174,44 @@ class TrainerScheduleController extends Controller
     }
 
     public function approved()
-{
-    $schedules = TrainerSchedule::where('status', 'approved')->get();
+    {
+        $schedules = TrainerSchedule::where('status', 'approved')->get();
 
-    return response()->json([
-        'status' => true,
-        'data' => $schedules,
-    ]);
-}
+        return response()->json([
+            'status' => true,
+            'data' => $schedules,
+        ]);
+    }
 
+
+    public function myOrders(Request $request)
+    {
+        $user = $request->user();
+
+        // If the user is not a parent, deny access
+        if (! $user->hasRole('parent')) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'هذا المستخدم ليس ولي أمر.',
+            ], 403);
+        }
+
+        $orders = PackageOrder::with([
+            'package',
+            'trainer.trainerProfile',
+            'trainerSchedule',
+            'child.user',
+            'child.childProfile',
+            'child.parent',
+            'parent',
+        ])
+            ->where('parent_id', $user->id)
+            ->get();
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'تم جلب الطلبات الخاصة بك بنجاح.',
+            'data'    => $orders,
+        ]);
+    }
 }
