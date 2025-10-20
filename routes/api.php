@@ -124,7 +124,7 @@ Route::middleware(['auth:sanctum', 'instructor'])->group(function () {
     Route::get('/trainer/dashboard', [DashboardController::class, 'instructorStats']);
     Route::get('/trainer/package-orders', [PackageOrderController::class, 'trainerOrders']);
     Route::post('/trainer/package-orders/{id}/complete-session', [PackageOrderController::class, 'completeSession']);
-
+    Route::post('/trainer/orders/{id}/add-extra-session', [PackageOrderController::class, 'addExtraSession']);
 });
 
 

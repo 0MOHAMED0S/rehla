@@ -9,234 +9,270 @@ use Illuminate\Support\Facades\Auth;
 class PackageOrderController extends Controller
 {
     public function index()
-{
-    $orders =PackageOrder::with([
-        'package',
-        'trainer.trainerProfile',
-        'trainerSchedule',
-        'child.user',
-        'parent',
-    ])
-    ->whereHas('trainerSchedule', function ($q) {
-        $q->where('status', 'booked');
-    })
-    ->get();
+    {
+        $orders = PackageOrder::with([
+            'package',
+            'trainer.trainerProfile',
+            'trainerSchedule',
+            'child.user',
+            'parent',
+        ])
+            ->whereHas('trainerSchedule', function ($q) {
+                $q->where('status', 'booked');
+            })
+            ->get();
 
-    return response()->json([
-        'status' => true,
-        'data' => $orders,
-    ]);
-}
-public function show($id)
-{
-    $order = PackageOrder::with([
-        'package',
-        'trainer.trainerProfile',   // Trainer details + profile
-        'trainerSchedule',
-        'child.user',               // Child info + user
-        'child.parent',             // Child’s parent
-        'parent',                   // Parent info
-    ])->find($id);
-
-    if (! $order) {
         return response()->json([
-            'status' => false,
-            'message' => 'الطلب غير موجود.',
-        ], 404);
+            'status' => true,
+            'data' => $orders,
+        ]);
+    }
+    public function show($id)
+    {
+        $order = PackageOrder::with([
+            'package',
+            'trainer.trainerProfile',   // Trainer details + profile
+            'trainerSchedule',
+            'child.user',               // Child info + user
+            'child.parent',             // Child’s parent
+            'parent',                   // Parent info
+        ])->find($id);
+
+        if (! $order) {
+            return response()->json([
+                'status' => false,
+                'message' => 'الطلب غير موجود.',
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'تم جلب تفاصيل الطلب بنجاح.',
+            'data' => $order,
+        ]);
+    }
+    public function myOrders(Request $request)
+    {
+        $user = auth()->user();
+
+
+        $orders = PackageOrder::with([
+            'package',
+            'trainer.trainerProfile',
+            'trainerSchedule',
+            'child.user',          // child's user info
+            'child.parent',        // child's parent
+            'parent',              // parent info
+        ])
+            ->where('parent_id', $user->id)
+            ->get();
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'تم جلب طلبات الباقات الخاصة بك بنجاح.',
+            'data'    => $orders,
+        ]);
+    }
+    public function myPackageOrdersForChild()
+    {
+        $user = auth()->user();
+
+        $childProfile = $user->childProfile;
+
+        if (! $childProfile) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'لم يتم العثور على ملف الطفل.',
+            ], 404);
+        }
+
+        $orders = PackageOrder::with([
+            'package',
+            'trainer.trainerProfile',
+            'trainerSchedule',
+            'child.user',
+            'child.parent',
+            'parent',
+        ])
+            ->where('child_id', $childProfile->id)
+            ->get();
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'تم جلب الطلبات بنجاح.',
+            'data'    => [
+                'child_profile' => $childProfile,
+                'orders'        => $orders,
+            ],
+        ]);
+    }
+    public function showChildOrder($id)
+    {
+        $user = auth()->user();
+        $childProfile = $user->childProfile;
+
+        if (! $childProfile) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'لم يتم العثور على ملف الطفل.',
+            ], 404);
+        }
+
+        $order = PackageOrder::with([
+            'package',
+            'trainer.trainerProfile',
+            'trainerSchedule',
+            'child.user',
+            'child.parent',
+            'parent',
+        ])
+            ->where('child_id', $childProfile->id)
+            ->find($id);
+
+        if (! $order) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'الطلب غير موجود أو لا يخص هذا الطفل.',
+            ], 404);
+        }
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'تم جلب تفاصيل الطلب بنجاح.',
+            'data'    => [
+                'child_profile' => $childProfile,
+                'order'         => $order,
+            ],
+        ]);
     }
 
-    return response()->json([
-        'status' => true,
-        'message' => 'تم جلب تفاصيل الطلب بنجاح.',
-        'data' => $order,
-    ]);
-}
-public function myOrders(Request $request)
-{
-    $user = auth()->user();
+    public function trainerOrders()
+    {
+        $trainer = Auth::user();
 
+        if (!$trainer || !$trainer->trainerProfile) {
+            return response()->json([
+                'status' => false,
+                'message' => 'You are not authorized or not a trainer.',
+            ], 403);
+        }
 
-    $orders = PackageOrder::with([
-        'package',
-        'trainer.trainerProfile',
-        'trainerSchedule',
-        'child.user',          // child's user info
-        'child.parent',        // child's parent
-        'parent',              // parent info
-    ])
-    ->where('parent_id', $user->id)
-    ->get();
+        $orders = PackageOrder::with([
+            'package',
+            'trainer.trainerProfile',
+            'trainerSchedule',
+            'child.user',        // child’s account info
+            'child.parent',      // parent of the child
+            'parent',            // direct parent relation
+        ])
+            ->where('trainer_id', $trainer->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
 
-    return response()->json([
-        'status'  => true,
-        'message' => 'تم جلب طلبات الباقات الخاصة بك بنجاح.',
-        'data'    => $orders,
-    ]);
-}
-public function myPackageOrdersForChild()
-{
-    $user = auth()->user();
-
-    $childProfile = $user->childProfile;
-
-    if (! $childProfile) {
         return response()->json([
-            'status'  => false,
-            'message' => 'لم يتم العثور على ملف الطفل.',
-        ], 404);
+            'status' => true,
+            'message' => 'Trainer package orders retrieved successfully.',
+            'data' => $orders,
+        ]);
     }
 
-    $orders = PackageOrder::with([
-        'package',
-        'trainer.trainerProfile',
-        'trainerSchedule',
-        'child.user',
-        'child.parent',
-        'parent',
-    ])
-    ->where('child_id', $childProfile->id)
-    ->get();
+    public function completeSession($id)
+    {
+        $trainer = Auth::user();
 
-    return response()->json([
-        'status'  => true,
-        'message' => 'تم جلب الطلبات بنجاح.',
-        'data'    => [
-            'child_profile' => $childProfile,
-            'orders'        => $orders,
-        ],
-    ]);
-}
-public function showChildOrder($id)
-{
-    $user = auth()->user();
-    $childProfile = $user->childProfile;
+        if (!$trainer || !$trainer->trainerProfile) {
+            return response()->json([
+                'status' => false,
+                'message' => 'غير مصرح لك بإتمام الجلسات.',
+            ], 403);
+        }
 
-    if (! $childProfile) {
+        $order = PackageOrder::where('id', $id)
+            ->where('trainer_id', $trainer->id)
+            ->first();
+
+        if (!$order) {
+            return response()->json([
+                'status' => false,
+                'message' => 'الطلب غير موجود أو غير مرتبط بك.',
+            ], 404);
+        }
+
+        if ($order->status === 'completed') {
+            return response()->json([
+                'status' => false,
+                'message' => 'تم إكمال هذا الطلب مسبقًا.',
+            ]);
+        }
+
+        if ($order->completed_sessions >= $order->sessions) {
+            $order->status = 'completed';
+            $order->save();
+
+            return response()->json([
+                'status' => false,
+                'message' => 'تم إكمال جميع الجلسات لهذا الطلب.',
+                'data' => $order,
+            ]);
+        }
+
+        $order->completed_sessions += 1;
+
+        if ($order->completed_sessions >= $order->sessions) {
+            $order->status = 'completed';
+        }
+
+        $order->save();
+
         return response()->json([
-            'status'  => false,
-            'message' => 'لم يتم العثور على ملف الطفل.',
-        ], 404);
+            'status' => true,
+            'message' => 'تم تحديث عدد الجلسات المكتملة بنجاح.',
+            'data' => [
+                'التقدم' => "{$order->completed_sessions}/{$order->sessions}",
+                'الحالة' => $order->status === 'completed' ? 'مكتمل' : 'قيد التنفيذ',
+                'الطلب' => $order,
+            ],
+        ]);
     }
-
-    $order = PackageOrder::with([
-        'package',
-        'trainer.trainerProfile',
-        'trainerSchedule',
-        'child.user',
-        'child.parent',
-        'parent',
-    ])
-    ->where('child_id', $childProfile->id)
-    ->find($id);
-
-    if (! $order) {
-        return response()->json([
-            'status'  => false,
-            'message' => 'الطلب غير موجود أو لا يخص هذا الطفل.',
-        ], 404);
-    }
-
-    return response()->json([
-        'status'  => true,
-        'message' => 'تم جلب تفاصيل الطلب بنجاح.',
-        'data'    => [
-            'child_profile' => $childProfile,
-            'order'         => $order,
-        ],
-    ]);
-}
-
-public function trainerOrders()
+    public function addExtraSession($id)
 {
     $trainer = Auth::user();
 
     if (!$trainer || !$trainer->trainerProfile) {
         return response()->json([
             'status' => false,
-            'message' => 'You are not authorized or not a trainer.',
+            'message' => 'غير مصرح لك بإضافة جلسات إضافية.',
         ], 403);
     }
 
-    $orders = PackageOrder::with([
-        'package',
-        'trainer.trainerProfile',
-        'trainerSchedule',
-        'child.user',        // child’s account info
-        'child.parent',      // parent of the child
-        'parent',            // direct parent relation
-    ])
-    ->where('trainer_id', $trainer->id)
-    ->orderBy('created_at', 'desc')
-    ->get();
-
-    return response()->json([
-        'status' => true,
-        'message' => 'Trainer package orders retrieved successfully.',
-        'data' => $orders,
-    ]);
-}
-
-public function completeSession($id)
-{
-    $trainer = Auth::user();
-
-    // Ensure the user is a trainer
-    if (!$trainer || !$trainer->trainerProfile) {
-        return response()->json([
-            'status' => false,
-            'message' => 'You are not authorized to complete sessions.',
-        ], 403);
-    }
-
-    // Find order that belongs to this trainer
     $order = PackageOrder::where('id', $id)
         ->where('trainer_id', $trainer->id)
         ->first();
 
-    if (!$order) {
+    if (! $order) {
         return response()->json([
             'status' => false,
-            'message' => 'Order not found or not assigned to you.',
+            'message' => 'الطلب غير موجود أو غير مرتبط بك.',
         ], 404);
     }
 
-    // Check if already completed
+    $order->additional_sessions += 1;
+    $order->sessions += 1;
+
     if ($order->status === 'completed') {
-        return response()->json([
-            'status' => false,
-            'message' => 'This order is already completed.',
-        ]);
-    }
-
-    // Prevent going over total sessions
-    if ($order->completed_sessions >= $order->sessions) {
-        $order->status = 'completed';
-        $order->save();
-
-        return response()->json([
-            'status' => false,
-            'message' => 'All sessions are already completed.',
-            'data' => $order,
-        ]);
-    }
-
-    // Increment the completed sessions
-    $order->completed_sessions += 1;
-
-    // If reached max sessions, mark as completed
-    if ($order->completed_sessions >= $order->sessions) {
-        $order->status = 'completed';
+        $order->status = 'ongoing';
     }
 
     $order->save();
 
     return response()->json([
         'status' => true,
-        'message' => 'Session completed successfully.',
+        'message' => 'تم إضافة جلسة إضافية بنجاح.',
         'data' => [
-            'progress' => "{$order->completed_sessions}/{$order->sessions}",
-            'status' => $order->status,
-            'order' => $order,
+            'عدد الجلسات الكلي' => $order->sessions,
+            'الجلسات المكتملة' => $order->completed_sessions,
+            'الجلسات الإضافية' => $order->additional_sessions,
+            'الحالة الحالية' => $order->status === 'completed' ? 'مكتمل' : 'قيد التنفيذ',
         ],
     ]);
 }
