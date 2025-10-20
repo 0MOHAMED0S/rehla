@@ -50,7 +50,7 @@ public function show($id)
         'data' => $order,
     ]);
 }
-public function myPackageOrders(Request $request)
+public function myOrders(Request $request)
 {
     $user = auth()->user();
 
