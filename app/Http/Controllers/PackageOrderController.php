@@ -50,26 +50,27 @@ public function show($id)
         'data' => $order,
     ]);
 }
-    public function myOrders(Request $request)
-    {
-        $user = $request->user();
+public function myPackageOrders(Request $request)
+{
+    $user = auth()->user();
 
-        $orders = PackageOrder::with([
-            'package',
-            'trainer.trainerProfile',
-            'trainerSchedule',
-            'child.user',
-            'child.childProfile',
-            'child.parent',
-            'parent',
-        ])
-            ->where('parent_id', $user->id)
-            ->get();
 
-        return response()->json([
-            'status'  => true,
-            'message' => 'تم جلب الطلبات الخاصة بك بنجاح.',
-            'data'    => $orders,
-        ]);
-    }
+    $orders = PackageOrder::with([
+        'package',
+        'trainer.trainerProfile',
+        'trainerSchedule',
+        'child.user',          // child's user info
+        'child.parent',        // child's parent
+        'parent',              // parent info
+    ])
+    ->where('parent_id', $user->id)
+    ->get();
+
+    return response()->json([
+        'status'  => true,
+        'message' => 'تم جلب طلبات الباقات الخاصة بك بنجاح.',
+        'data'    => $orders,
+    ]);
+}
+
 }
