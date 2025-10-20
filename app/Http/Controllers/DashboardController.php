@@ -11,6 +11,7 @@ use App\Models\Article;
 use App\Models\PackageOrder;
 use App\Models\ContactMessage;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
@@ -72,6 +73,36 @@ class DashboardController extends Controller
                 'new_support_messages' => $newSupportMessages,
                 'completed_revenue' => $completedRevenue,
             ]
+        ]);
+    }
+    public function instructorStats()
+    {
+        $trainer = Auth::user();
+
+        // إجمالي الجلسات (الطلبات)
+        $totalSessions = PackageOrder::where('trainer_id', $trainer->id)->count();
+
+        // الجلسات المكتملة
+        $completedSessions = PackageOrder::where('trainer_id', $trainer->id)
+            ->where('status', 'completed')
+            ->count();
+
+        // إجمالي الطلاب (عدد الأطفال الفريدين)
+        $totalStudents = PackageOrder::where('trainer_id', $trainer->id)
+            ->distinct('child_id')
+            ->count('child_id');
+
+        // // متوسط التقييم (يفترض أن عندك جدول تقييم مثلاً trainer_reviews)
+        // $averageRating = \App\Models\TrainerReview::where('trainer_id', $trainer->id)->avg('rating') ?? 0;
+
+        return response()->json([
+            'status' => true,
+            'data' => [
+                // 'average_rating'     => round($averageRating, 1),
+                'total_students'     => $totalStudents,
+                'completed_sessions' => $completedSessions,
+                'total_sessions'     => $totalSessions,
+            ],
         ]);
     }
 }

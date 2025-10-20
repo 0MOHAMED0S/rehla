@@ -121,6 +121,7 @@ Route::middleware(['auth:sanctum', 'instructor'])->group(function () {
     Route::post('trainer/schedule', [TrainerScheduleController::class, 'store']);
     Route::get('trainer/schedule/my', [TrainerScheduleController::class, 'mySchedules']);
     Route::get('/trainer/profile', [TrainerScheduleController::class, 'profile']);
+    Route::get('/trainer/dashboard', [DashboardController::class, 'instructorStats']);
 });
 
 
