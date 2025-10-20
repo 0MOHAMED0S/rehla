@@ -21,6 +21,7 @@ class PackageOrder extends Model
         'status',
         'price',
         'completed_sessions'
+        
     ];
 
     public function package()

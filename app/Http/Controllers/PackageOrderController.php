@@ -176,4 +176,69 @@ public function trainerOrders()
     ]);
 }
 
+public function completeSession($id)
+{
+    $trainer = Auth::user();
+
+    // Ensure the user is a trainer
+    if (!$trainer || !$trainer->trainerProfile) {
+        return response()->json([
+            'status' => false,
+            'message' => 'You are not authorized to complete sessions.',
+        ], 403);
+    }
+
+    // Find order that belongs to this trainer
+    $order = PackageOrder::where('id', $id)
+        ->where('trainer_id', $trainer->id)
+        ->first();
+
+    if (!$order) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Order not found or not assigned to you.',
+        ], 404);
+    }
+
+    // Check if already completed
+    if ($order->status === 'completed') {
+        return response()->json([
+            'status' => false,
+            'message' => 'This order is already completed.',
+        ]);
+    }
+
+    // Prevent going over total sessions
+    if ($order->completed_sessions >= $order->sessions) {
+        $order->status = 'completed';
+        $order->save();
+
+        return response()->json([
+            'status' => false,
+            'message' => 'All sessions are already completed.',
+            'data' => $order,
+        ]);
+    }
+
+    // Increment the completed sessions
+    $order->completed_sessions += 1;
+
+    // If reached max sessions, mark as completed
+    if ($order->completed_sessions >= $order->sessions) {
+        $order->status = 'completed';
+    }
+
+    $order->save();
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Session completed successfully.',
+        'data' => [
+            'progress' => "{$order->completed_sessions}/{$order->sessions}",
+            'status' => $order->status,
+            'order' => $order,
+        ],
+    ]);
+}
+
 }

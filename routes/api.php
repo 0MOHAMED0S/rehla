@@ -123,6 +123,7 @@ Route::middleware(['auth:sanctum', 'instructor'])->group(function () {
     Route::get('/trainer/profile', [TrainerScheduleController::class, 'profile']);
     Route::get('/trainer/dashboard', [DashboardController::class, 'instructorStats']);
     Route::get('/trainer/package-orders', [PackageOrderController::class, 'trainerOrders']);
+    Route::post('/trainer/package-orders/{id}/complete-session', [PackageOrderController::class, 'completeSession']);
 
 });
 
