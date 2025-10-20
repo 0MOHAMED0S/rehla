@@ -54,14 +54,6 @@ public function show($id)
     {
         $user = $request->user();
 
-        // If the user is not a parent, deny access
-        if (! $user->hasRole('parent')) {
-            return response()->json([
-                'status'  => false,
-                'message' => 'هذا المستخدم ليس ولي أمر.',
-            ], 403);
-        }
-
         $orders = PackageOrder::with([
             'package',
             'trainer.trainerProfile',
