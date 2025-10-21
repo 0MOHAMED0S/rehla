@@ -187,100 +187,47 @@ class OrderController extends Controller
         }
     }
 
-    public function getMyOrders()
-    {
-        try {
-            $userId = Auth::id();
+public function getMyOrders()
+{
+    try {
+        $userId = Auth::id();
 
-            // جلب الطلبات الخاصة بالمستخدم الحالي مع جميع العلاقات
-            $orders = Order::with([
-                'user',
-                'child.user', // جلب بيانات الطفل مع المستخدم المرتبط بالطفل
-                'product',
-                'shipping'
-            ])
-                ->where('user_id', $userId)
-                ->orWhereHas('child', function ($query) use ($userId) {
-                    $query->where('parent_id', $userId);
-                })
-                ->orderBy('id', 'desc')
-                ->get();
+        // جلب الطلبات الخاصة بالمستخدم نفسه أو بأطفاله
+        $orders = Order::with([
+            'user',
+            'child.user',  // جلب الطفل مع بياناته كمستخدم
+            'product',
+            'shipping'
+        ])
+        ->where('user_id', $userId)
+        ->orWhereHas('child', function ($query) use ($userId) {
+            $query->where('parent_id', $userId);
+        })
+        ->orderBy('id', 'desc')
+        ->get();
 
-            // تنسيق النتيجة
-            $formattedOrders = $orders->map(function ($order) {
-                return [
-                    'id' => $order->id,
-                    'name' => $order->name,
-                    'price' => $order->price,
-                    'price_type' => $order->price_type,
-                    'status' => $order->status,
-                    'address' => $order->address,
-                    'phone' => $order->phone,
-                    'note' => $order->note,
-                    'age' => $order->age,
-                    'gender' => $order->gender,
-                    'created_at' => $order->created_at->format('Y-m-d H:i:s'),
-
-                    // صور الطلب
-                    'images' => [
-                        'image1' => $order->image1 ? asset('storage/' . $order->image1) : null,
-                        'image2' => $order->image2 ? asset('storage/' . $order->image2) : null,
-                        'image3' => $order->image3 ? asset('storage/' . $order->image3) : null,
-                    ],
-
-                    // بيانات الطفل
-                    'child' => $order->child ? [
-                        'id' => $order->child->id,
-                        'age' => $order->child->age,
-                        'gender' => $order->child->gender,
-                        'interests' => $order->child->interests,
-                        'strengths' => $order->child->strengths,
-                        'avatar' => $order->child->avatar ? asset('storage/' . $order->child->avatar) : null,
-                        'user' => $order->child->user ? [
-                            'id' => $order->child->user->id,
-                            'name' => $order->child->user->name,
-                            'email' => $order->child->user->email,
-                        ] : null,
-                    ] : null,
-
-                    // بيانات المنتج
-                    'product' => $order->product ? [
-                        'id' => $order->product->id,
-                        'name' => $order->product->name,
-                        'description' => $order->product->description,
-                        'price' => $order->product->price,
-                        'image' => $order->product->image ? asset('storage/' . $order->product->image) : null,
-                    ] : null,
-
-                    // بيانات الشحن
-                    'shipping' => $order->shipping ? [
-                        'id' => $order->shipping->id,
-                        'company' => $order->shipping->company_name ?? null,
-                        'status' => $order->shipping->status ?? null,
-                        'tracking_number' => $order->shipping->tracking_number ?? null,
-                    ] : null,
-
-                    // المستخدم (صاحب الطلب)
-                    'user' => $order->user ? [
-                        'id' => $order->user->id,
-                        'name' => $order->user->name,
-                        'email' => $order->user->email,
-                    ] : null,
-                ];
-            });
-
+        if ($orders->isEmpty()) {
             return response()->json([
                 'status' => true,
-                'message' => $orders->isNotEmpty() ? 'تم جلب الطلبات بنجاح' : 'لا توجد طلبات لهذا المستخدم',
-                'orders' => $formattedOrders,
-            ], 200);
-        } catch (Exception $e) {
-            Log::error('getMyOrders error: ' . $e->getMessage());
-            return response()->json([
-                'status' => false,
-                'message' => 'حدث خطأ أثناء جلب الطلبات.',
-                'error' => $e->getMessage(),
-            ], 500);
+                'message' => 'لا توجد طلبات لهذا المستخدم',
+                'orders' => [],
+            ]);
         }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'تم جلب الطلبات بنجاح',
+            'orders' => $orders,
+        ]);
+
+    } catch (\Exception $e) {
+        \Log::error('getMyOrders error: ' . $e->getMessage());
+        return response()->json([
+            'status' => false,
+            'message' => 'حدث خطأ أثناء جلب الطلبات.',
+            'error' => $e->getMessage(),
+        ], 500);
     }
+}
+
 }
