@@ -145,7 +145,6 @@ class PackageOrderController extends Controller
             ],
         ]);
     }
-
     public function trainerOrders()
     {
         $trainer = Auth::user();
@@ -175,7 +174,6 @@ class PackageOrderController extends Controller
             'data' => $orders,
         ]);
     }
-
     public function completeSession($id)
     {
         $trainer = Auth::user();
@@ -276,5 +274,4 @@ class PackageOrderController extends Controller
         ],
     ]);
 }
-
 }
