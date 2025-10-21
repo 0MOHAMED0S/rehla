@@ -54,6 +54,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('user/my-subscription', [SubscribeController::class, 'getMySubscriptions']);
 
     Route::post('user/package-orders', [UserPackageController::class, 'store']);
+Route::get('user/my-orders', [UserOrderController::class, 'getMyOrders']);
 
 });
 
@@ -185,4 +186,3 @@ Route::get('package/search/trainers', [UserPackageController::class, 'searchTrai
 Route::get('/packages', [UserPackageController::class, 'index']);
 Route::get('user/trainer-schedules/approved', [TrainerScheduleController::class, 'approved']);
 
-Route::get('user/my-orders', [UserOrderController::class, 'getMyOrders']);
