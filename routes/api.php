@@ -185,4 +185,4 @@ Route::get('package/search/trainers', [UserPackageController::class, 'searchTrai
 Route::get('/packages', [UserPackageController::class, 'index']);
 Route::get('user/trainer-schedules/approved', [TrainerScheduleController::class, 'approved']);
 
-Route::get('/my-orders', [UserOrderController::class, 'getMyOrders']);
+Route::get('user/my-orders', [UserOrderController::class, 'getMyOrders']);
