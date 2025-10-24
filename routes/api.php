@@ -105,8 +105,9 @@ Route::middleware(['auth:sanctum', 'enhalak'])->group(function () {
     Route::put('admin/subscribe-detail', [SubscribeDetailController::class, 'update']);
     Route::get('admin/orders/{id}', [OrdersController::class, 'showOrderDetails']);
     Route::get('admin/subscribers', [SubscribersSubscribeController::class, 'index']);
-    Route::get('admin/subscribe-detail', [SubscribeDetailController::class, 'index']);
 });
+    Route::get('admin/subscribe-detail', [SubscribeDetailController::class, 'index']);
+
 
 Route::middleware(['auth:sanctum', 'bedaet'])->group(function () {
     Route::apiResource('/admin/packages', PackageController::class);

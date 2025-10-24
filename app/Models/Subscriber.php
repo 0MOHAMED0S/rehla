@@ -31,10 +31,10 @@ class Subscriber extends Model
         'expired_at',
     ];
     public function user()
-{
-    return $this->belongsTo(User::class);
-}
-  public function shipping()
+    {
+        return $this->belongsTo(User::class);
+    }
+    public function shipping()
     {
         return $this->belongsTo(Shipping::class);
     }
